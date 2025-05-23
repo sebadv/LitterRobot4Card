@@ -5,6 +5,15 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 [![buymeacoffee_badge](https://img.shields.io/badge/Buy%20me%20a%20coffee-%23FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/seba.gent)
 
+## Prerequisites
+
+This card requires the [official Litter-Robot integration](https://www.home-assistant.io/integrations/litterrobot/) to be installed and configured in your Home Assistant instance. The card uses the following entities provided by the integration:
+
+- Status Code Entity (`sensor.litterrobot_status_code`)
+- Litter Level Entity (`sensor.litterrobot_litter_level`)
+- Waste Drawer Entity (`sensor.litterrobot_waste_drawer`)
+- Pet Weight Entities (from pet profiles in the Whisker app)
+
 ## Features
 
 - Display Litter-Robot 4 status and information

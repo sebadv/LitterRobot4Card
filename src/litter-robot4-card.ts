@@ -11,7 +11,7 @@ interface LitterRobot4Config extends LovelaceCardConfig {
 
 // Register card in the custom cards list
 console.info(
-  '%c LITTER-ROBOT-4-CARD %c 1.0.4 ',
+  '%c LITTER-ROBOT-4-CARD %c 1.0.5 ',
   'color: white; background: #4caf50; font-weight: 700;',
   'color: #4caf50; background: white; font-weight: 700;',
 );
