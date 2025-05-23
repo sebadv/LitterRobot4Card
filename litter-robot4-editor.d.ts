@@ -15,4 +15,7 @@ export declare class LitterRobot4Editor extends LitElement {
     static styles: import("lit").CSSResult;
     protected render(): import("lit-html").TemplateResult<1>;
     private _valueChanged;
+    private _petWeightChanged;
+    private _addPetWeight;
+    private _toggleMetric;
 }
