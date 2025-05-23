@@ -2,12 +2,8 @@ import { LitElement, html, css } from 'lit';
 import { HomeAssistant, LovelaceCardConfig } from 'custom-card-helpers';
 import { LitterRobot4Editor } from './litter-robot4-editor';
 
-interface LitterRobot4Config extends LovelaceCardConfig {
-  type: string;
-  entities?: string[];
-  pet_weight_entities?: string[];
-  use_metric?: boolean;
-}
+// Debug logging
+console.debug('Registering Litter-Robot 4 Card...');
 
 // Register card in the custom cards list
 console.info(
@@ -15,6 +11,28 @@ console.info(
   'color: white; background: #4caf50; font-weight: 700;',
   'color: #4caf50; background: white; font-weight: 700;',
 );
+
+// Add to custom cards list for visual picker
+try {
+  console.debug('Adding to custom cards list...');
+  (window as any).customCards = (window as any).customCards || [];
+  (window as any).customCards.push({
+    type: "litter-robot4-card",
+    name: "Litter-Robot 4 Card",
+    description: "A custom card to show Litter-Robot 4 status",
+    preview: true
+  });
+  console.debug('Added to custom cards list successfully');
+} catch (error) {
+  console.error('Error adding to custom cards list:', error);
+}
+
+interface LitterRobot4Config extends LovelaceCardConfig {
+  type: string;
+  entities?: string[];
+  pet_weight_entities?: string[];
+  use_metric?: boolean;
+}
 
 class LitterRobot4Card extends LitElement {
   public static async getConfigElement() {
@@ -232,14 +250,11 @@ class LitterRobot4Card extends LitElement {
 }
 
 // Register both card and editor
-customElements.define('litter-robot4-card', LitterRobot4Card);
-customElements.define('litter-robot4-editor', LitterRobot4Editor);
-
-// Add to custom cards list for visual picker
-(window as any).customCards = (window as any).customCards || [];
-(window as any).customCards.push({
-  type: "litter-robot4-card",
-  name: "Litter-Robot 4 Card",
-  description: "A custom card to show Litter-Robot 4 status",
-  preview: true
-});
+try {
+  console.debug('Defining custom elements...');
+  customElements.define('litter-robot4-card', LitterRobot4Card);
+  customElements.define('litter-robot4-editor', LitterRobot4Editor);
+  console.debug('Custom elements defined successfully');
+} catch (error) {
+  console.error('Error defining custom elements:', error);
+}
