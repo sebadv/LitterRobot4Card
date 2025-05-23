@@ -5,12 +5,13 @@ import { LitterRobot4Editor } from './litter-robot4-editor';
 interface LitterRobot4Config extends LovelaceCardConfig {
   type: string;
   entities?: string[];
+  pet_weight_entities?: string[];
   use_metric?: boolean;
 }
 
 // Register card in the custom cards list
 console.info(
-  '%c LITTER-ROBOT-4-CARD %c 1.0.0 ',
+  '%c LITTER-ROBOT-4-CARD %c 1.0.3 ',
   'color: white; background: #4caf50; font-weight: 700;',
   'color: #4caf50; background: white; font-weight: 700;',
 );
@@ -25,7 +26,8 @@ class LitterRobot4Card extends LitElement {
   public static getStubConfig() {
     return {
       type: 'custom:litter-robot4-card',
-      entities: ['', '', '', '']
+      entities: ['', '', ''],
+      pet_weight_entities: []
     };
   }
 
@@ -46,6 +48,7 @@ class LitterRobot4Card extends LitElement {
     this._config = {
       ...config,
       entities: config.entities || [],
+      pet_weight_entities: config.pet_weight_entities || [],
       use_metric: config.use_metric || false
     };
   }
@@ -89,6 +92,12 @@ class LitterRobot4Card extends LitElement {
       height: 16px;
       border-radius: 50%;
       margin-right: 8px;
+    }
+
+    .pet-weights {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
     }
 
     .green { background-color: #4caf50; }
@@ -168,16 +177,19 @@ class LitterRobot4Card extends LitElement {
       return html``;
     }
 
-    const [status, litter, waste, weight] = (this._config.entities || []).map(
+    const [status, litter, waste] = (this._config.entities || []).map(
       (id: string) => id ? this.hass!.states[id] : undefined
     );
+
+    const petWeights = (this._config.pet_weight_entities || [])
+      .map(id => id ? this.hass!.states[id] : undefined)
+      .filter(state => state !== undefined);
 
     const litterNum = Number(litter?.state);
     const wasteNum = Number(waste?.state);
 
     const litterValue = !isNaN(litterNum) ? `${Math.round(litterNum)}%` : '--';
     const wasteValue = !isNaN(wasteNum) ? `${Math.round(wasteNum)}%` : '--';
-    const weightValue = weight?.state ? this.convertWeight(weight.state) : '';
 
     const litterColor = !isNaN(litterNum) ? this.getLitterColor(litterNum) : 'red';
     const wasteColor = !isNaN(wasteNum) ? this.getWasteColor(wasteNum) : 'red';
@@ -204,11 +216,16 @@ class LitterRobot4Card extends LitElement {
           <div class="label">Waste: ${wasteValue} Full</div>
         </div>
 
-        ${weight ? html`
-          <div class="item clickable" @click=${() => this._showMoreInfo(weight?.entity_id || '')}>
-            <div class="icon blue"></div>
-            <div class="label">Pet Weight: ${weightValue}</div>
-          </div>` : ''}
+        ${petWeights.length > 0 ? html`
+          <div class="pet-weights">
+            ${petWeights.map(weight => html`
+              <div class="item clickable" @click=${() => this._showMoreInfo(weight?.entity_id || '')}>
+                <div class="icon blue"></div>
+                <div class="label">${weight?.attributes?.friendly_name || 'Pet'}: ${this.convertWeight(weight?.state || '')}</div>
+              </div>
+            `)}
+          </div>
+        ` : ''}
       </ha-card>
     `;
   }

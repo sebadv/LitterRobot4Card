@@ -8,7 +8,7 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 
 - Display Litter-Robot 4 status and information
 - Shows litter level, waste drawer status, and current operation status
-- Pet weight display with automatic unit conversion (lbs/kg)
+- Multiple pet weight tracking with automatic unit conversion (lbs/kg)
 - Configurable entity selection through the UI
 - Modern and clean design
 - Real-time status updates
@@ -16,7 +16,6 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 ## Upcoming Features
 
 - Visual representation of litter and waste levels similar to the Whisker app
-- Support for multiple pet weight tracking (for households with multiple pets)
 - More UI improvements and customization options
 
 ## Installation
@@ -58,17 +57,24 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
    - Status Code Entity: Shows the current operation status code
    - Litter Level Entity: Shows how full the litter box is
    - Waste Drawer Entity: Shows the waste drawer status
-   - Pet Weight Entity: Shows the pet weight (optional)
-4. Toggle "Use Metric Units" if you want to display weight in kilograms instead of pounds
+4. Add pet weight entities:
+   - Click "Add Pet" to add a new pet weight entity
+   - Each pet's weight will show their friendly name from Home Assistant
+   - You can add as many pets as you need
+5. Toggle "Use Metric Units" if you want to display weights in kilograms instead of pounds
 
 ### Using YAML
 
 ```yaml
 type: custom:litter-robot4-card
-entity: sensor.litterrobot_status_code
-litter_level_entity: sensor.litterrobot_litter_level
-waste_drawer_entity: sensor.litterrobot_waste_drawer
-pet_weight_entity: sensor.litterrobot_pet_weight  # Optional
+entities:
+  - sensor.litterrobot_status_code  # Required: The status code sensor
+  - sensor.litterrobot_litter_level  # Required: Litter level sensor
+  - sensor.litterrobot_waste_drawer  # Required: Waste drawer sensor
+pet_weight_entities:  # Optional: List of pet weight sensors
+  - sensor.cat1_weight
+  - sensor.cat2_weight
+  # Add as many pet weight sensors as needed
 use_metric: false  # Optional, defaults to false (lbs)
 ```
 
@@ -76,10 +82,8 @@ use_metric: false  # Optional, defaults to false (lbs)
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| entity | string | required | Main Litter-Robot status code entity (must be the status code sensor, e.g. `sensor.litterrobot_status_code`) |
-| litter_level_entity | string | optional | Entity ID for litter level sensor (`sensor.litterrobot_litter_level`) |
-| waste_drawer_entity | string | optional | Entity ID for waste drawer sensor (`sensor.litterrobot_waste_drawer`) |
-| pet_weight_entity | string | optional | Entity ID for pet weight sensor |
+| entities | array | required | List of main entities in order: [status_code, litter_level, waste_drawer] |
+| pet_weight_entities | array | optional | List of pet weight sensor entities |
 | use_metric | boolean | false | Set to `true` to display weight in kg instead of lbs |
 
 ## Development
