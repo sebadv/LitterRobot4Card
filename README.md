@@ -8,6 +8,7 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 
 - Display Litter-Robot 4 status and information
 - Shows litter level, waste drawer status, and current operation status
+- Pet weight display with automatic unit conversion (lbs/kg)
 - Configurable entity selection through the UI
 - Modern and clean design
 - Real-time status updates
@@ -33,11 +34,11 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 ### Manual Installation
 
 1. Download the `litter-robot4-card.js` file from the latest release
-2. Copy it to your `config/www/community/litter-robot4-card/dist/` directory
+2. Copy it to your `config/www/community/litter-robot4-card/` directory
 3. Add the following to your Lovelace resources:
    ```yaml
    resources:
-     - url: /local/community/litter-robot4-card/dist/litter-robot4-card.js
+     - url: /local/community/litter-robot4-card/litter-robot4-card.js
        type: module
    ```
 
@@ -51,6 +52,8 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
    - Status Entity: Shows the current operation status
    - Litter Level Entity: Shows how full the litter box is
    - Waste Drawer Entity: Shows the waste drawer status
+   - Pet Weight Entity: Shows the pet weight (optional)
+4. Toggle "Use Metric Units" if you want to display weight in kilograms instead of pounds
 
 ### Using YAML
 
@@ -59,6 +62,8 @@ type: custom:litter-robot4-card
 entity: sensor.litterrobot_status_code
 litter_level_entity: sensor.litterrobot_litter_level
 waste_drawer_entity: sensor.litterrobot_waste_drawer
+pet_weight_entity: sensor.litterrobot_pet_weight  # Optional
+use_metric: false  # Optional, defaults to false (lbs)
 ```
 
 ### Options
@@ -68,6 +73,8 @@ waste_drawer_entity: sensor.litterrobot_waste_drawer
 | entity | string | required | Main Litter-Robot status entity (`sensor.litterrobot_status_code`) |
 | litter_level_entity | string | optional | Entity ID for litter level sensor (`sensor.litterrobot_litter_level`) |
 | waste_drawer_entity | string | optional | Entity ID for waste drawer sensor (`sensor.litterrobot_waste_drawer`) |
+| pet_weight_entity | string | optional | Entity ID for pet weight sensor |
+| use_metric | boolean | false | Set to `true` to display weight in kg instead of lbs |
 
 ## Development
 
@@ -81,7 +88,7 @@ waste_drawer_entity: sensor.litterrobot_waste_drawer
 1. Clone this repository
 2. Run `npm install` to install dependencies
 3. Run `npm run build` to build the card
-4. Copy the generated `dist/litter-robot4-card.js` to your Home Assistant installation
+4. Copy the generated `litter-robot4-card.js` to your Home Assistant installation
 
 ### Contributing
 
