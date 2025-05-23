@@ -13,6 +13,12 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 - Modern and clean design
 - Real-time status updates
 
+## Upcoming Features
+
+- Visual representation of litter and waste levels similar to the Whisker app
+- Support for multiple pet weight tracking (for households with multiple pets)
+- More UI improvements and customization options
+
 ## Installation
 
 ### HACS (Recommended)
@@ -49,7 +55,7 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 1. Add the card to your dashboard
 2. Click "Configure" on the card
 3. Select your Litter-Robot 4 entities from the dropdown menus:
-   - Status Entity: Shows the current operation status
+   - Status Code Entity: Shows the current operation status code
    - Litter Level Entity: Shows how full the litter box is
    - Waste Drawer Entity: Shows the waste drawer status
    - Pet Weight Entity: Shows the pet weight (optional)
@@ -70,7 +76,7 @@ use_metric: false  # Optional, defaults to false (lbs)
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| entity | string | required | Main Litter-Robot status entity (`sensor.litterrobot_status_code`) |
+| entity | string | required | Main Litter-Robot status code entity (must be the status code sensor, e.g. `sensor.litterrobot_status_code`) |
 | litter_level_entity | string | optional | Entity ID for litter level sensor (`sensor.litterrobot_litter_level`) |
 | waste_drawer_entity | string | optional | Entity ID for waste drawer sensor (`sensor.litterrobot_waste_drawer`) |
 | pet_weight_entity | string | optional | Entity ID for pet weight sensor |
