@@ -4,5 +4,7 @@
   "filename": "litter-robot4-card.js",
   "render_readme": true,
   "homeassistant": "2023.8.0",
+  "hide_default_branch": true,
+  "zip_release": true,
   "version": "1.0.5"
 } 
