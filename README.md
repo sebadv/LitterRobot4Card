@@ -3,6 +3,7 @@
 A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a beautiful and intuitive way.
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![buymeacoffee_badge](https://img.shields.io/badge/Buy%20me%20a%20coffee-%23FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/seba.gent)
 
 ## Features
 
