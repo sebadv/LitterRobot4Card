@@ -7,6 +7,7 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 ## Features
 
 - Display Litter-Robot 4 status and information
+- Shows litter level, waste drawer status, and current operation status
 - Configurable entity selection through the UI
 - Modern and clean design
 - Real-time status updates
@@ -46,24 +47,27 @@ A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a
 
 1. Add the card to your dashboard
 2. Click "Configure" on the card
-3. Select your Litter-Robot 4 entities from the dropdown menus
+3. Select your Litter-Robot 4 entities from the dropdown menus:
+   - Status Entity: Shows the current operation status
+   - Litter Level Entity: Shows how full the litter box is
+   - Waste Drawer Entity: Shows the waste drawer status
 
 ### Using YAML
 
 ```yaml
 type: custom:litter-robot4-card
-entity: sensor.litter_robot_4_status
-weight_entity: sensor.litter_robot_4_weight
-cycles_entity: sensor.litter_robot_4_cycles
+entity: sensor.litterrobot_status_code
+litter_level_entity: sensor.litterrobot_litter_level
+waste_drawer_entity: sensor.litterrobot_waste_drawer
 ```
 
 ### Options
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| entity | string | required | Main Litter-Robot 4 status entity |
-| weight_entity | string | optional | Entity ID for weight sensor |
-| cycles_entity | string | optional | Entity ID for cycle count sensor |
+| entity | string | required | Main Litter-Robot status entity (`sensor.litterrobot_status_code`) |
+| litter_level_entity | string | optional | Entity ID for litter level sensor (`sensor.litterrobot_litter_level`) |
+| waste_drawer_entity | string | optional | Entity ID for waste drawer sensor (`sensor.litterrobot_waste_drawer`) |
 
 ## Development
 
