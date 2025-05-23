@@ -5,6 +5,7 @@ import { LitterRobot4Editor } from './litter-robot4-editor';
 interface LitterRobot4Config extends LovelaceCardConfig {
   type: string;
   entities?: string[];
+  use_metric?: boolean;
 }
 
 // Register card in the custom cards list
@@ -44,7 +45,8 @@ class LitterRobot4Card extends LitElement {
     }
     this._config = {
       ...config,
-      entities: config.entities || []
+      entities: config.entities || [],
+      use_metric: config.use_metric || false
     };
   }
 
@@ -153,6 +155,14 @@ class LitterRobot4Card extends LitElement {
     this.dispatchEvent(event);
   }
 
+  private convertWeight(value: string): string {
+    if (!value || isNaN(Number(value))) return '';
+    const weight = Number(value);
+    return this._config?.use_metric 
+      ? `${(weight * 0.453592).toFixed(1)} kg`
+      : `${weight} lbs`;
+  }
+
   protected render() {
     if (!this.hass || !this._config) {
       return html``;
@@ -167,7 +177,7 @@ class LitterRobot4Card extends LitElement {
 
     const litterValue = !isNaN(litterNum) ? `${Math.round(litterNum)}%` : '--';
     const wasteValue = !isNaN(wasteNum) ? `${Math.round(wasteNum)}%` : '--';
-    const weightValue = weight?.state ? `${weight.state} kg` : '';
+    const weightValue = weight?.state ? this.convertWeight(weight.state) : '';
 
     const litterColor = !isNaN(litterNum) ? this.getLitterColor(litterNum) : 'red';
     const wasteColor = !isNaN(wasteNum) ? this.getWasteColor(wasteNum) : 'red';
