@@ -12,11 +12,7 @@
     "litter-robot",
     "pet"
   ],
-  "module": "dist/litter-robot4-card.js",
+  "module": "litter-robot4-card.js",
   "repository": "https://github.com/sebadv/LitterRobot4Card",
-  "author": "Séba",
-  "release": {
-    "draft": false,
-    "prerelease": false
-  }
+  "author": "Séba"
 } 
