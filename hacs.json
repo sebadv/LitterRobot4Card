@@ -1,7 +1,7 @@
 {
   "name": "Litter-Robot 4 Card",
-  "content_in_root": true,
-  "filename": "litter-robot4-card.js",
+  "content_in_root": false,
+  "filename": "dist/litter-robot4-card.js",
   "render_readme": true,
-  "hide_default_branch": false
+  "hide_default_branch": true
 } 
