@@ -14,5 +14,7 @@
   ],
   "module": "litter-robot4-card.js",
   "repository": "https://github.com/sebadv/LitterRobot4Card",
-  "author": "Séba"
+  "author": "Séba",
+  "type": "plugin",
+  "homeassistant": "2023.8.0"
 } 
