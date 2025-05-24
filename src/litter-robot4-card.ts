@@ -5,10 +5,14 @@ import { LitterRobot4Editor } from './litter-robot4-editor';
 // Import translations
 import * as en from './translations/en.json';
 import * as es from './translations/es.json';
+import * as nl from './translations/nl.json';
+import * as fr from './translations/fr.json';
 
 const TRANSLATIONS: { [key: string]: any } = {
   en: en,
   es: es,
+  nl: nl,
+  fr: fr,
 };
 
 // Debug logging

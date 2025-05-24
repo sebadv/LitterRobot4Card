@@ -117,6 +117,8 @@ export class LitterRobot4Editor extends LitElement {
           >
             <ha-list-item value="en">English</ha-list-item>
             <ha-list-item value="es">Español</ha-list-item>
+            <ha-list-item value="nl">Nederlands</ha-list-item>
+            <ha-list-item value="fr">Français</ha-list-item>
           </ha-select>
 
           <ha-formfield .label=${'Use Metric Units'}>

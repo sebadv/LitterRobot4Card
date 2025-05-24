@@ -1,0 +1,44 @@
+{
+  "common": {
+    "title": "Litter-Robot 4",
+    "litter": "Kattengrit",
+    "waste": "Afval",
+    "full": "Vol",
+    "pet_weight": "Huisdier Gewicht"
+  },
+  "status": {
+    "br": "Kap Verwijderd",
+    "ccc": "Reinigingscyclus Voltooid",
+    "ccp": "Reinigingscyclus Bezig",
+    "cd": "Reinigingscyclus Klaar",
+    "csf": "Katsensor Fout",
+    "csi": "Katsensor Onderbroken",
+    "cst": "Katsensor Timing",
+    "df1": "Lade Vol (1)",
+    "df2": "Lade Vol (2)",
+    "dfs": "Lade Vol Sensor",
+    "dhf": "Lade Hall Sensor Fout",
+    "dpf": "Lade Positie Fout",
+    "ec": "Foutconditie",
+    "hpf": "Hall Positie Fout",
+    "off": "Uitgeschakeld",
+    "offline": "Offline",
+    "otf": "Overbelasting Fout",
+    "p": "Gepauzeerd",
+    "pd": "Pad Gedetecteerd",
+    "pwrd": "Batterij Leeg",
+    "pwru": "Opstarten",
+    "rdy": "Gereed",
+    "scf": "Sensor Contact Fout",
+    "sdf": "Sensor Lade Fout",
+    "spf": "Sensor Positie Fout"
+  },
+  "editor": {
+    "status_entity": "Status Entiteit",
+    "litter_entity": "Kattengrit Niveau Entiteit",
+    "waste_entity": "Afval Lade Entiteit",
+    "pet_weight_entity": "Huisdier Gewicht Entiteit",
+    "language": "Taal",
+    "use_metric": "Gebruik Metrische Eenheden"
+  }
+} 
