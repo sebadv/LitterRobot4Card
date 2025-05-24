@@ -2,17 +2,5 @@
   "name": "Litter-Robot 4 Card",
   "version": "1.0.9",
   "description": "A Home Assistant Lovelace custom card that displays Litter-Robot 4 status, litter level, and waste drawer information",
-  "keywords": [
-    "home-assistant",
-    "homeassistant",
-    "hass",
-    "automation",
-    "lovelace",
-    "custom-card",
-    "litter-robot",
-    "pet"
-  ],
-  "module": "litter-robot4-card.js",
-  "repository": "https://github.com/sebadv/LitterRobot4Card",
-  "author": "Séba"
+  "module": "litter-robot4-card.js"
 } 
