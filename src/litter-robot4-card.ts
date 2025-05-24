@@ -20,7 +20,7 @@ console.debug('Registering Litter-Robot 4 Card...');
 
 // Register card in the custom cards list
 console.info(
-  '%c LITTER-ROBOT-4-CARD %c v1.0.5 ',
+  '%c LITTER-ROBOT-4-CARD %c v1.0.9 ',
   'color: white; background: #4caf50; font-weight: 700;',
   'color: #4caf50; background: white; font-weight: 700;',
 );

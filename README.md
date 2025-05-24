@@ -1,54 +1,29 @@
 # Litter-Robot 4 Card
 
-A Home Assistant Lovelace custom card to display Litter-Robot 4 information in a beautiful and intuitive way.
+A Home Assistant Lovelace custom card that displays Litter-Robot 4 status, litter level, and waste drawer information.
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![buymeacoffee_badge](https://img.shields.io/badge/Buy%20me%20a%20coffee-%23FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/seba.gent)
+![Litter-Robot 4 Card](https://raw.githubusercontent.com/sebadv/LitterRobot4Card/main/images/card.png)
 
 ## Prerequisites
 
-This card requires the [official Litter-Robot integration](https://www.home-assistant.io/integrations/litterrobot/) to be installed and configured in your Home Assistant instance. The card uses the following entities provided by the integration:
-
-- Status Code Entity (`sensor.litterrobot_status_code`)
-- Litter Level Entity (`sensor.litterrobot_litter_level`)
-- Waste Drawer Entity (`sensor.litterrobot_waste_drawer`)
-- Pet Weight Entities (from pet profiles in the Whisker app)
-
-## Features
-
-- Display Litter-Robot 4 status and information
-- Shows litter level, waste drawer status, and current operation status
-- Multiple pet weight tracking with automatic unit conversion (lbs/kg)
-- Configurable entity selection through the UI
-- Modern and clean design
-- Real-time status updates
-
-## Upcoming Features
-
-- Visual representation of litter and waste levels similar to the Whisker app
-- More UI improvements and customization options
+1. Home Assistant installed
+2. HACS (Home Assistant Community Store) installed
+3. [Litter-Robot Integration](https://www.home-assistant.io/integrations/litterrobot/) set up in Home Assistant
 
 ## Installation
 
-### HACS (Recommended)
+### HACS Installation (Recommended)
 
-1. Make sure you have [HACS](https://hacs.xyz) installed in your Home Assistant instance
-2. Add this repository as a custom repository in HACS:
-   - Click on HACS in the sidebar
-   - Click on "Frontend"
-   - Click the three dots in the top right corner
-   - Select "Custom repositories"
-   - Add the URL of this repository
-   - Select "Lovelace" as the category
-3. Click "Install"
-4. Add the card to your dashboard:
-   - Click the three dots menu in the top right of your dashboard and select "Edit Dashboard"
-   - Click the "+" button to add a new card
-   - Search for "Litter-Robot 4" in the card picker
+1. Open HACS in your Home Assistant instance
+2. Click on "Frontend" in the sidebar
+3. Click the "+ Explore & Download Repositories" button
+4. Search for "Litter-Robot 4"
+5. Click "Download"
+6. Restart Home Assistant
 
 ### Manual Installation
 
-1. Download the `litter-robot4-card.js` file from the latest release
+1. Download the `litter-robot4-card.js` file from the [latest release](https://github.com/sebadv/LitterRobot4Card/releases)
 2. Copy it to your `config/www/community/litter-robot4-card/` directory
 3. Add the following to your Lovelace resources:
    ```yaml
@@ -61,17 +36,22 @@ This card requires the [official Litter-Robot integration](https://www.home-assi
 
 ### Using the UI
 
-1. Add the card to your dashboard
-2. Click "Configure" on the card
-3. Select your Litter-Robot 4 entities from the dropdown menus:
-   - Status Code Entity: Shows the current operation status code
-   - Litter Level Entity: Shows how full the litter box is
-   - Waste Drawer Entity: Shows the waste drawer status
-4. Add pet weight entities:
-   - Click "Add Pet" to add a new pet weight entity
-   - Each pet's weight will show their friendly name from Home Assistant
-   - You can add as many pets as you need
-5. Toggle "Use Metric Units" if you want to display weights in kilograms instead of pounds
+1. Add the card to your dashboard:
+   - Click the three dots menu in the top right of your dashboard
+   - Select "Edit Dashboard"
+   - Click the "+" button to add a new card
+   - Search for "Litter-Robot 4"
+
+2. Configure the card:
+   - Click "Configure" on the card
+   - Required Entities:
+     - Status Entity: Shows the current operation status
+     - Litter Level Entity: Shows how full the litter box is
+     - Waste Drawer Entity: Shows the waste drawer status
+   - Optional Settings:
+     - Pet Weight Entities: Add multiple pet weight sensors
+     - Language: Choose from English, Spanish, Dutch, or French
+     - Use Metric Units: Toggle between pounds (lbs) and kilograms (kg)
 
 ### Using YAML
 
@@ -85,32 +65,65 @@ pet_weight_entities:  # Optional: List of pet weight sensors
   - sensor.cat1_weight
   - sensor.cat2_weight
   # Add as many pet weight sensors as needed
-use_metric: false  # Optional, defaults to false (lbs)
+language: en  # Optional: 'en', 'es', 'nl', or 'fr' (defaults to 'en')
+use_metric: false  # Optional: Set to true for kg instead of lbs (defaults to false)
 ```
 
-### Options
+### Configuration Options
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
 | entities | array | required | List of main entities in order: [status_code, litter_level, waste_drawer] |
 | pet_weight_entities | array | optional | List of pet weight sensor entities |
+| language | string | 'en' | Interface language ('en', 'es', 'nl', 'fr') |
 | use_metric | boolean | false | Set to `true` to display weight in kg instead of lbs |
 
-## Development
+### Available Languages
 
-### Prerequisites
+- English (en)
+- Spanish (es)
+- Dutch (nl)
+- French (fr)
 
-- Node.js
-- npm
+### Status Indicators
 
-### Setup
+The card uses color-coded indicators for different states:
 
-1. Clone this repository
-2. Run `npm install` to install dependencies
-3. Run `npm run build` to build the card
-4. Copy the generated `litter-robot4-card.js` to your Home Assistant installation
+- Status Colors:
+  - 🔵 Blue: Ready, Clean Cycle Complete, Clean Cycle Done
+  - 🟠 Orange: Clean Cycle In Progress
+  - 🔴 Red: Various error states and faults
+  - 🟡 Yellow: Paused, Power Up, Power Drained, Pad Detect
+  - ⚫ Gray: Power Off, Offline
 
-### Contributing
+- Litter Level Colors:
+  - 🟢 Green: ≥ 70%
+  - 🟡 Yellow: 40-69%
+  - 🔴 Red: < 40%
+
+- Waste Drawer Colors:
+  - 🟢 Green: ≤ 70%
+  - 🟡 Yellow: 71-90%
+  - 🔴 Red: > 90%
+
+## Features
+
+- Real-time status display with color indicators
+- Litter level monitoring
+- Waste drawer level monitoring
+- Multiple pet weight tracking
+- Multi-language support
+- Metric/Imperial unit conversion
+- Interactive elements (click for more details)
+- Modern, clean design that matches Home Assistant's theme
+
+## Support
+
+If you like this card, feel free to buy me a coffee:
+
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/sebadv)
+
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
