@@ -35,13 +35,15 @@
     "lit": "^3.3.0"
   },
   "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
-    "rollup": "^2.79.2",
-    "rollup-plugin-typescript2": "^0.36.0",
-    "typescript": "^5.8.3",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
-    "eslint": "^8.0.0"
+    "eslint": "^8.0.0",
+    "rollup": "^2.79.2",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "typescript": "^5.8.3"
   }
 }

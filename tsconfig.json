@@ -3,12 +3,15 @@
     "target": "es2017",
     "module": "esnext",
     "moduleResolution": "node",
-    "lib": ["es2017", "dom"],
-    "declaration": true,
-    "sourceMap": true,
-    "outDir": "dist",
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "noEmit": true,
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }

@@ -54,6 +54,15 @@ export class LitterRobot4Editor extends LitElement {
       color: var(--text-primary-color);
       padding: 4px 8px;
     }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    ha-select {
+      width: 100%;
+    }
   `;
 
   protected render() {
@@ -100,12 +109,22 @@ export class LitterRobot4Editor extends LitElement {
           `)}
         </div>
         
-        <div class="option">
-          <ha-switch
-            .checked=${this._config.use_metric || false}
-            @change=${this._toggleMetric}
-          ></ha-switch>
-          <span>Use Metric Units (kg)</span>
+        <div class="row">
+          <ha-select
+            .label=${'Language'}
+            .value=${this._config.language || 'en'}
+            @selected=${this._languageChanged}
+          >
+            <ha-list-item value="en">English</ha-list-item>
+            <ha-list-item value="es">Español</ha-list-item>
+          </ha-select>
+
+          <ha-formfield .label=${'Use Metric Units'}>
+            <ha-switch
+              .checked=${this._config.use_metric || false}
+              @change=${this._metricChanged}
+            ></ha-switch>
+          </ha-formfield>
         </div>
       </div>
     `;
@@ -169,16 +188,34 @@ export class LitterRobot4Editor extends LitElement {
     });
   }
 
-  private _toggleMetric(ev: Event): void {
-    const target = ev.target as any;
-    if (!target || !this._config) return;
+  private _languageChanged(ev: CustomEvent) {
+    if (!this._config || !ev.target) {
+      return;
+    }
 
-    fireEvent(this, 'config-changed', {
-      config: {
-        ...this._config,
-        use_metric: target.checked,
-      },
+    this._updateConfig({ language: (ev.target as any).value });
+  }
+
+  private _metricChanged(ev: CustomEvent) {
+    if (!this._config || !ev.target) {
+      return;
+    }
+
+    this._updateConfig({ use_metric: (ev.target as any).checked });
+  }
+
+  private _updateConfig(update: any) {
+    const newConfig = {
+      ...this._config,
+      ...update,
+    };
+
+    const event = new CustomEvent('config-changed', {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true,
     });
+    this.dispatchEvent(event);
   }
 }
 

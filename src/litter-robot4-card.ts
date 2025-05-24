@@ -2,6 +2,15 @@ import { LitElement, html, css } from 'lit';
 import { HomeAssistant, LovelaceCardConfig } from 'custom-card-helpers';
 import { LitterRobot4Editor } from './litter-robot4-editor';
 
+// Import translations
+import * as en from './translations/en.json';
+import * as es from './translations/es.json';
+
+const TRANSLATIONS: { [key: string]: any } = {
+  en: en,
+  es: es,
+};
+
 // Debug logging
 console.debug('Registering Litter-Robot 4 Card...');
 
@@ -12,7 +21,7 @@ console.info(
   'color: #4caf50; background: white; font-weight: 700;',
 );
 
-// Add to custom cards list for visual picker
+// Add to custom cards list for visual pickerswlxxxxl
 try {
   console.debug('Adding to custom cards list...');
   (window as any).customCards = (window as any).customCards || [];
@@ -32,6 +41,7 @@ interface LitterRobot4Config extends LovelaceCardConfig {
   entities?: string[];
   pet_weight_entities?: string[];
   use_metric?: boolean;
+  language?: string;
 }
 
 class LitterRobot4Card extends LitElement {
@@ -45,7 +55,8 @@ class LitterRobot4Card extends LitElement {
     return {
       type: 'custom:litter-robot4-card',
       entities: ['', '', ''],
-      pet_weight_entities: []
+      pet_weight_entities: [],
+      language: 'en'
     };
   }
 
@@ -67,8 +78,23 @@ class LitterRobot4Card extends LitElement {
       ...config,
       entities: config.entities || [],
       pet_weight_entities: config.pet_weight_entities || [],
-      use_metric: config.use_metric || false
+      use_metric: config.use_metric || false,
+      language: config.language || 'en'
     };
+  }
+
+  private _(key: string): string {
+    const lang = this._config?.language || 'en';
+    const parts = key.split('.');
+    let result = TRANSLATIONS[lang];
+    for (const part of parts) {
+      if (result && typeof result === 'object') {
+        result = result[part];
+      } else {
+        return key;
+      }
+    }
+    return result || key;
   }
 
   static styles = css`
@@ -133,17 +159,7 @@ class LitterRobot4Card extends LitElement {
   `;
 
   private getReadableStatus(code: string): string {
-    const map: Record<string, string> = {
-      br: 'Bonnet Removed', ccc: 'Clean Cycle Complete', ccp: 'Clean Cycle In Progress',
-      cd: 'Clean Cycle Done', csf: 'Cat Sensor Fault', csi: 'Cat Sensor Interrupted',
-      cst: 'Cat Sensor Timing', df1: 'Drawer Full (1)', df2: 'Drawer Full (2)',
-      dfs: 'Drawer Full Sensor', dhf: 'Drawer Hall Sensor Fault', dpf: 'Drawer Position Fault',
-      ec: 'Error Condition', hpf: 'Hall Position Fault', off: 'Power Off', offline: 'Offline',
-      otf: 'Over Torque Fault', p: 'Paused', pd: 'Pad Detect', pwrd: 'Power Drained',
-      pwru: 'Power Up', rdy: 'Ready', scf: 'Sensor Contact Fault',
-      sdf: 'Sensor Drawer Fault', spf: 'Sensor Position Fault'
-    };
-    return map[code] ?? `Unknown (${code})`;
+    return this._(`status.${code}`) || `Unknown (${code})`;
   }
 
   private getStatusColor(code: string): string {
@@ -217,7 +233,7 @@ class LitterRobot4Card extends LitElement {
 
     return html`
       <ha-card>
-        <div class="title">Litter-Robot 4</div>
+        <div class="title">${this._('common.title')}</div>
 
         <div class="status clickable" @click=${() => this._showMoreInfo(status?.entity_id || '')}>
           <div class="status-icon ${statusColor}"></div>
@@ -226,12 +242,12 @@ class LitterRobot4Card extends LitElement {
 
         <div class="item clickable" @click=${() => this._showMoreInfo(litter?.entity_id || '')}>
           <div class="icon ${litterColor}"></div>
-          <div class="label">Litter: ${litterValue}</div>
+          <div class="label">${this._('common.litter')}: ${litterValue}</div>
         </div>
 
         <div class="item clickable" @click=${() => this._showMoreInfo(waste?.entity_id || '')}>
           <div class="icon ${wasteColor}"></div>
-          <div class="label">Waste: ${wasteValue} Full</div>
+          <div class="label">${this._('common.waste')}: ${wasteValue} ${this._('common.full')}</div>
         </div>
 
         ${petWeights.length > 0 ? html`
@@ -239,7 +255,7 @@ class LitterRobot4Card extends LitElement {
             ${petWeights.map(weight => html`
               <div class="item clickable" @click=${() => this._showMoreInfo(weight?.entity_id || '')}>
                 <div class="icon blue"></div>
-                <div class="label">${weight?.attributes?.friendly_name || 'Pet'}: ${this.convertWeight(weight?.state || '')}</div>
+                <div class="label">${weight?.attributes?.friendly_name || this._('common.pet_weight')}: ${this.convertWeight(weight?.state || '')}</div>
               </div>
             `)}
           </div>
