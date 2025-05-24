@@ -113,7 +113,7 @@ export class LitterRobot4Editor extends LitElement {
           <ha-select
             .label=${'Language'}
             .value=${this._config.language || 'en'}
-            @selected=${this._languageChanged}
+            @value-changed=${this._languageChanged}
           >
             <ha-list-item value="en">English</ha-list-item>
             <ha-list-item value="es">Español</ha-list-item>
@@ -191,11 +191,11 @@ export class LitterRobot4Editor extends LitElement {
   }
 
   private _languageChanged(ev: CustomEvent) {
-    if (!this._config || !ev.target) {
+    if (!this._config || !ev.detail) {
       return;
     }
 
-    this._updateConfig({ language: (ev.target as any).value });
+    this._updateConfig({ language: ev.detail.value });
   }
 
   private _metricChanged(ev: CustomEvent) {

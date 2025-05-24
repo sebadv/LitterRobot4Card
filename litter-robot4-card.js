@@ -58,7 +58,7 @@ const w=globalThis,A=w.trustedTypes,C=A?A.createPolicy("lit-html",{createHTML:t=
           <ha-select
             .label=${"Language"}
             .value=${this._config.language||"en"}
-            @selected=${this._languageChanged}
+            @value-changed=${this._languageChanged}
           >
             <ha-list-item value="en">English</ha-list-item>
             <ha-list-item value="es">Español</ha-list-item>
@@ -74,7 +74,7 @@ const w=globalThis,A=w.trustedTypes,C=A?A.createPolicy("lit-html",{createHTML:t=
           </ha-formfield>
         </div>
       </div>
-    `}_valueChanged(t,e){if(!this._config)return;if(!t.target)return;const i=[...this._config.entities||[]];for(i[e]=t.detail.value;i.length<3;)i.push("");ct(this,"config-changed",{config:Object.assign(Object.assign({},this._config),{entities:i})})}_petWeightChanged(t,e){if(!this._config)return;if(!t.target)return;const i=[...this._config.pet_weight_entities||[]];t.detail.value?i[e]=t.detail.value:i.splice(e,1),ct(this,"config-changed",{config:Object.assign(Object.assign({},this._config),{pet_weight_entities:i})})}_addPetWeight(){if(!this._config)return;const t=[...this._config.pet_weight_entities||[],""];ct(this,"config-changed",{config:Object.assign(Object.assign({},this._config),{pet_weight_entities:t})})}_languageChanged(t){this._config&&t.target&&this._updateConfig({language:t.target.value})}_metricChanged(t){this._config&&t.target&&this._updateConfig({use_metric:t.target.checked})}_updateConfig(t){const e=Object.assign(Object.assign({},this._config),t),i=new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0});this.dispatchEvent(i)}}dt.styles=n`
+    `}_valueChanged(t,e){if(!this._config)return;if(!t.target)return;const i=[...this._config.entities||[]];for(i[e]=t.detail.value;i.length<3;)i.push("");ct(this,"config-changed",{config:Object.assign(Object.assign({},this._config),{entities:i})})}_petWeightChanged(t,e){if(!this._config)return;if(!t.target)return;const i=[...this._config.pet_weight_entities||[]];t.detail.value?i[e]=t.detail.value:i.splice(e,1),ct(this,"config-changed",{config:Object.assign(Object.assign({},this._config),{pet_weight_entities:i})})}_addPetWeight(){if(!this._config)return;const t=[...this._config.pet_weight_entities||[],""];ct(this,"config-changed",{config:Object.assign(Object.assign({},this._config),{pet_weight_entities:t})})}_languageChanged(t){this._config&&t.detail&&this._updateConfig({language:t.detail.value})}_metricChanged(t){this._config&&t.target&&this._updateConfig({use_metric:t.target.checked})}_updateConfig(t){const e=Object.assign(Object.assign({},this._config),t),i=new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0});this.dispatchEvent(i)}}dt.styles=n`
     .entities {
       padding: 8px;
     }
