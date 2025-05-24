@@ -60,8 +60,21 @@ export class LitterRobot4Editor extends LitElement {
       gap: 16px;
       margin-bottom: 16px;
     }
-    ha-select {
+    .select-container {
+      flex: 1;
+    }
+    .select-container label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--primary-text-color);
+    }
+    select {
       width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid var(--divider-color);
+      background: var(--card-background-color);
+      color: var(--primary-text-color);
     }
   `;
 
@@ -110,16 +123,18 @@ export class LitterRobot4Editor extends LitElement {
         </div>
         
         <div class="row">
-          <ha-select
-            .label=${'Language'}
-            .value=${this._config.language || 'en'}
-            @value-changed=${this._languageChanged}
-          >
-            <ha-list-item value="en">English</ha-list-item>
-            <ha-list-item value="es">Español</ha-list-item>
-            <ha-list-item value="nl">Nederlands</ha-list-item>
-            <ha-list-item value="fr">Français</ha-list-item>
-          </ha-select>
+          <div class="select-container">
+            <label>Language</label>
+            <select
+              .value=${this._config.language || 'en'}
+              @change=${this._languageChanged}
+            >
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="nl">Nederlands</option>
+              <option value="fr">Français</option>
+            </select>
+          </div>
 
           <ha-formfield .label=${'Use Metric Units'}>
             <ha-switch
@@ -190,12 +205,12 @@ export class LitterRobot4Editor extends LitElement {
     });
   }
 
-  private _languageChanged(ev: CustomEvent) {
-    if (!this._config || !ev.detail) {
+  private _languageChanged(ev: Event) {
+    if (!this._config || !ev.target) {
       return;
     }
 
-    this._updateConfig({ language: ev.detail.value });
+    this._updateConfig({ language: (ev.target as HTMLSelectElement).value });
   }
 
   private _metricChanged(ev: CustomEvent) {
