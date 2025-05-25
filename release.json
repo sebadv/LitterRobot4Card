@@ -1,6 +1,0 @@
-{
-    "version": "1.0.5",
-    "new_install_prompt_erase": false,
-    "last_commit": "9cb66cb",
-    "changelog": "- Add documentation about required Home Assistant Litter-Robot integration\n- Add Buy Me a Coffee support\n- Multiple pet weight tracking\n- Include distribution files in release"
-} 
