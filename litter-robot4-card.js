@@ -667,7 +667,7 @@ class LitterRobot4Editor extends HTMLElement {
         </div>
       `;
 
-      // Add event listeners with proper event handling
+      // Add event listeners with focus management to prevent dropdown closing
       this._addEventListeners();
 
     } catch (error) {
@@ -681,53 +681,46 @@ class LitterRobot4Editor extends HTMLElement {
     const selects = this.shadowRoot.querySelectorAll('select');
     const inputs = this.shadowRoot.querySelectorAll('input');
     
-    selects.forEach(select => {
-      // Prevent all event bubbling that could close the dropdown
-      ['click', 'mousedown', 'mouseup', 'focus', 'blur', 'keydown', 'keyup'].forEach(eventType => {
-        select.addEventListener(eventType, (e) => {
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }, { capture: true, passive: false });
+    // Apply comprehensive event stopping to all interactive elements
+    [...selects, ...inputs].forEach(element => {
+      // Apply the _stopAllEvents method to all relevant events
+      ['click', 'mousedown', 'mouseup', 'focus', 'blur', 'keydown', 'keyup', 'focusin', 'focusout'].forEach(eventType => {
+        element.addEventListener(eventType, this._stopAllEvents.bind(this), true);
       });
-      
-      // Special handling for change events
+    });
+    
+    // Add specific change handlers after stopping all other events
+    selects.forEach(select => {
       select.addEventListener('change', (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
+        this._stopAllEvents(e);
         this._handleSelectChange(e);
-      }, { capture: true });
-      
-      // Prevent focus loss that causes dropdown to close
-      select.addEventListener('focusout', (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        // Only allow focusout if clicking on another select or input
-        const relatedTarget = e.relatedTarget;
-        if (relatedTarget && (relatedTarget.tagName === 'SELECT' || relatedTarget.tagName === 'INPUT')) {
-          return;
-        }
-        e.preventDefault();
-      }, { capture: true });
+      }, true);
     });
     
     inputs.forEach(input => {
-      ['click', 'mousedown', 'mouseup', 'focus', 'blur'].forEach(eventType => {
-        input.addEventListener(eventType, (e) => {
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }, { capture: true, passive: false });
-      });
-      
       input.addEventListener('change', (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
+        this._stopAllEvents(e);
         this._handleInputChange(e);
-      }, { capture: true });
+      }, true);
     });
     
     // Detect if we're in a modal and add appropriate class
     if (this.closest('ha-dialog') || this.closest('[role="dialog"]') || this.closest('.mdc-dialog')) {
       this.classList.add('in-modal');
+    }
+  }
+
+  _stopAllEvents(e) {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    
+    // For focusout events, also prevent default to maintain focus
+    if (e.type === 'focusout') {
+      const relatedTarget = e.relatedTarget;
+      // Only allow focusout if moving to another interactive element in our editor
+      if (!relatedTarget || !this.shadowRoot.contains(relatedTarget)) {
+        e.preventDefault();
+      }
     }
   }
 
