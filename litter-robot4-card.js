@@ -6,7 +6,7 @@
 import { LitElement, html, css } from 'lit';
 
 console.debug("Registering Litter-Robot 4 Card...");
-console.info("%c LITTER-ROBOT-4-CARD %c v1.0.11 ", "color: white; background: #4caf50; font-weight: 700;", "color: #4caf50; background: white; font-weight: 700;");
+console.info("%c LITTER-ROBOT-4-CARD %c Loaded ", "color: white; background: #4caf50; font-weight: 700;", "color: #4caf50; background: white; font-weight: 700;");
 
 try {
   console.debug("Adding to custom cards list...");

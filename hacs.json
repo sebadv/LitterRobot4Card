@@ -1,6 +1,6 @@
 {
   "name": "Litter-Robot 4 Card",
-  "content_in_root": true,
+  "content_in_root": false,
   "filename": "litter-robot4-card.js",
   "render_readme": true,
   "description": "A Home Assistant Lovelace custom card for Litter-Robot 4 status monitoring with litter level, waste drawer, and optional hopper support.",
