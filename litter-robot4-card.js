@@ -441,6 +441,11 @@ class LitterRobot4Card extends HTMLElement {
 class LitterRobot4Editor extends HTMLElement {
   constructor() {
     super();
+    
+    // Generate unique ID for this instance to track lifecycle
+    this._instanceId = Math.random().toString(36).substr(2, 9);
+    console.debug(`🏗️ LitterRobot4Editor constructor - Instance ${this._instanceId} created`);
+    
     this._config = {
       entities: ["", "", "", ""],
       pet_weight_entities: [],
@@ -454,25 +459,74 @@ class LitterRobot4Editor extends HTMLElement {
     
     // Bind the global event interceptor
     this._interceptOutsideClicks = this._interceptOutsideClicks.bind(this);
+    
+    console.debug(`✅ LitterRobot4Editor constructor complete - Instance ${this._instanceId}`);
   }
 
   connectedCallback() {
+    console.debug(`🔌 LitterRobot4Editor connectedCallback - Instance ${this._instanceId} - Adding global event listeners`);
+    
     // Add global event interceptors when element is connected to DOM
     window.addEventListener('click', this._interceptOutsideClicks, true);
     window.addEventListener('mousedown', this._interceptOutsideClicks, true);
     window.addEventListener('focusin', this._interceptOutsideClicks, true);
+    
+    // COMPREHENSIVE DEBUG: Add listeners for ALL potential events that could close dialogs
+    window.addEventListener('focusout', this._interceptOutsideClicks, true);
+    window.addEventListener('blur', this._interceptOutsideClicks, true);
+    window.addEventListener('pointerdown', this._interceptOutsideClicks, true);
+    window.addEventListener('pointerup', this._interceptOutsideClicks, true);
+    window.addEventListener('touchstart', this._interceptOutsideClicks, true);
+    
+    console.debug(`🎯 All event listeners registered for instance ${this._instanceId}:`, {
+      click: true,
+      mousedown: true,
+      focusin: true,
+      focusout: true,
+      blur: true,
+      pointerdown: true,
+      pointerup: true,
+      touchstart: true
+    });
   }
 
   disconnectedCallback() {
+    console.debug(`🔌 LitterRobot4Editor disconnectedCallback - Instance ${this._instanceId} - Removing global event listeners`);
+    
     // Clean up global event listeners when element is removed
     window.removeEventListener('click', this._interceptOutsideClicks, true);
     window.removeEventListener('mousedown', this._interceptOutsideClicks, true);
     window.removeEventListener('focusin', this._interceptOutsideClicks, true);
+    window.removeEventListener('focusout', this._interceptOutsideClicks, true);
+    window.removeEventListener('blur', this._interceptOutsideClicks, true);
+    window.removeEventListener('pointerdown', this._interceptOutsideClicks, true);
+    window.removeEventListener('pointerup', this._interceptOutsideClicks, true);
+    window.removeEventListener('touchstart', this._interceptOutsideClicks, true);
+    
+    console.debug(`🗑️ All event listeners removed for instance ${this._instanceId}`);
   }
 
   _interceptOutsideClicks(ev) {
+    // COMPREHENSIVE DEBUG: Log every single event that reaches our handler
+    console.debug(`🎯 Event interceptor triggered:`, {
+      type: ev.type,
+      target: ev.target,
+      targetTag: ev.target?.tagName,
+      currentTarget: ev.currentTarget,
+      timeStamp: ev.timeStamp,
+      bubbles: ev.bubbles,
+      composed: ev.composed
+    });
+    
+    // Add debugger to catch events in real-time
+    if (ev.type === 'click' || ev.type === 'mousedown' || ev.type === 'focusout' || ev.type === 'blur') {
+      console.debug(`🚨 CRITICAL EVENT: ${ev.type} - Breaking for inspection`);
+      debugger;
+    }
+    
     // Get the composed path to check if event originated from our editor
     const path = ev.composedPath();
+    console.debug(`📍 Event path:`, path.map(el => el.tagName || el.nodeName || el.toString()));
     
     // Define elements that should be allowed to function normally
     const allowedTags = ['SELECT', 'OPTION', 'INPUT', 'LABEL', 'MDC-MENU', 'MDC-LIST', 'HA-TEXTFIELD', 'HA-ENTITY-PICKER'];
@@ -487,17 +541,31 @@ class LitterRobot4Editor extends HTMLElement {
       return el && el.tagName && allowedTags.includes(el.tagName.toUpperCase());
     });
     
+    console.debug(`🔍 Event analysis:`, {
+      isInsideEditor,
+      isAllowedInteractive,
+      shouldIntercept: isInsideEditor && !isAllowedInteractive
+    });
+    
     // Only intercept events that are:
     // 1. Inside our editor
     // 2. NOT targeting allowed interactive elements
     // 3. Are events that could trigger dialog close
-    if (isInsideEditor && !isAllowedInteractive && (ev.type === 'click' || ev.type === 'mousedown' || ev.type === 'focusin')) {
+    if (isInsideEditor && !isAllowedInteractive) {
       // Event originated from inside our editor but not from an interactive element
       // Stop it from reaching HA's dialog handlers
       ev.stopPropagation();
       ev.stopImmediatePropagation();
       
-      console.debug(`Intercepted ${ev.type} event to prevent dialog close`);
+      console.debug(`🛑 INTERCEPTED ${ev.type} event to prevent dialog close`);
+      
+      // For focus events, also prevent default to maintain focus
+      if (ev.type === 'focusout' || ev.type === 'blur') {
+        ev.preventDefault();
+        console.debug(`🚫 Prevented default for ${ev.type} event`);
+      }
+    } else {
+      console.debug(`✅ ALLOWED ${ev.type} event to proceed normally`);
     }
   }
 
@@ -522,10 +590,19 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _render() {
+    console.debug(`🎨 LitterRobot4Editor _render called - Instance ${this._instanceId}`);
+    
     if (!this._hass || !this._hass.states || !this._config) {
+      console.debug(`⏳ Render skipped - Instance ${this._instanceId} - Missing dependencies:`, {
+        hasHass: !!this._hass,
+        hasStates: !!(this._hass && this._hass.states),
+        hasConfig: !!this._config
+      });
       this.shadowRoot.innerHTML = '<div style="padding: 16px;">Loading editor...</div>';
       return;
     }
+
+    console.debug(`✅ Render proceeding - Instance ${this._instanceId} - All dependencies available`);
 
     // Ensure entities array exists and has the right length
     if (!this._config.entities || !Array.isArray(this._config.entities)) {
@@ -537,6 +614,7 @@ class LitterRobot4Editor extends HTMLElement {
 
     try {
       const entities = Object.keys(this._hass.states).sort();
+      console.debug(`📊 Rendering with ${entities.length} entities - Instance ${this._instanceId}`);
       
       this.shadowRoot.innerHTML = `
         <style>
