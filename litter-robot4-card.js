@@ -438,23 +438,30 @@ class LitterRobot4Card extends HTMLElement {
 class LitterRobot4Editor extends HTMLElement {
   constructor() {
     super();
-    this.config = {};
+    this._config = {};
     this._hass = {};
   }
 
+  static get properties() {
+    return {
+      hass: {},
+      _config: {},
+    };
+  }
+
   setConfig(config) {
-    this.config = { ...config };
-    if (!this.config.entities) {
-      this.config.entities = ["", "", "", ""];
+    this._config = { ...config };
+    if (!this._config.entities) {
+      this._config.entities = ["", "", "", ""];
     }
-    if (!this.config.pet_weight_entities) {
-      this.config.pet_weight_entities = [];
+    if (!this._config.pet_weight_entities) {
+      this._config.pet_weight_entities = [];
     }
-    if (!this.config.language) {
-      this.config.language = "en";
+    if (!this._config.language) {
+      this._config.language = "en";
     }
-    if (!this.config.use_metric) {
-      this.config.use_metric = false;
+    if (!this._config.use_metric) {
+      this._config.use_metric = false;
     }
     this._updateEditor();
   }
@@ -468,58 +475,59 @@ class LitterRobot4Editor extends HTMLElement {
     return this._hass;
   }
 
-  _valueChanged(index, value) {
-    if (!this.config) return;
-    
-    if (!this.config.entities) {
-      this.config.entities = ["", "", "", ""];
+  _computeLabel(schema) {
+    const labelMap = {
+      status_entity: "Status Code Entity (required)",
+      litter_entity: "Litter Level Entity (required)", 
+      waste_entity: "Waste Drawer Entity (required)",
+      hopper_entity: "Litter Hopper Entity (optional)",
+      language: "Language",
+      use_metric: "Use metric units (kg instead of lbs)"
+    };
+    return labelMap[schema.name] || schema.name;
+  }
+
+  _valueChanged(ev) {
+    if (!this._config || !this._hass) {
+      return;
     }
-    
-    this.config.entities[index] = value;
-    this._fireConfigChanged();
-  }
 
-  _languageChanged(value) {
-    if (!this.config) return;
-    this.config.language = value;
-    this._fireConfigChanged();
-  }
+    const newConfig = { ...this._config };
+    const value = ev.detail.value;
 
-  _metricChanged(value) {
-    if (!this.config) return;
-    this.config.use_metric = value;
-    this._fireConfigChanged();
-  }
-
-  _addPetWeight() {
-    if (!this.config.pet_weight_entities) {
-      this.config.pet_weight_entities = [];
+    // Map the flat form data back to the nested structure
+    if (value.status_entity !== undefined) {
+      newConfig.entities = newConfig.entities || ["", "", "", ""];
+      newConfig.entities[0] = value.status_entity || "";
     }
-    this.config.pet_weight_entities.push("");
-    this._fireConfigChanged();
-    this._updateEditor();
-  }
-
-  _removePetWeight(index) {
-    if (!this.config.pet_weight_entities) return;
-    this.config.pet_weight_entities.splice(index, 1);
-    this._fireConfigChanged();
-    this._updateEditor();
-  }
-
-  _petWeightChanged(index, value) {
-    if (!this.config.pet_weight_entities) {
-      this.config.pet_weight_entities = [];
+    if (value.litter_entity !== undefined) {
+      newConfig.entities = newConfig.entities || ["", "", "", ""];
+      newConfig.entities[1] = value.litter_entity || "";
     }
-    this.config.pet_weight_entities[index] = value;
-    this._fireConfigChanged();
-  }
+    if (value.waste_entity !== undefined) {
+      newConfig.entities = newConfig.entities || ["", "", "", ""];
+      newConfig.entities[2] = value.waste_entity || "";
+    }
+    if (value.hopper_entity !== undefined) {
+      newConfig.entities = newConfig.entities || ["", "", "", ""];
+      newConfig.entities[3] = value.hopper_entity || "";
+    }
+    if (value.pet_weight_entities !== undefined) {
+      newConfig.pet_weight_entities = value.pet_weight_entities || [];
+    }
+    if (value.language !== undefined) {
+      newConfig.language = value.language;
+    }
+    if (value.use_metric !== undefined) {
+      newConfig.use_metric = value.use_metric;
+    }
 
-  _fireConfigChanged() {
+    this._config = newConfig;
+
     const event = new CustomEvent("config-changed", {
-      detail: { config: this.config },
+      detail: { config: newConfig },
       bubbles: true,
-      composed: true
+      composed: true,
     });
     this.dispatchEvent(event);
   }
@@ -534,22 +542,82 @@ class LitterRobot4Editor extends HTMLElement {
       return;
     }
 
-    const entities = this.config.entities || ["", "", "", ""];
-    const petWeightEntities = this.config.pet_weight_entities || [];
-    const language = this.config.language || "en";
-    const useMetric = this.config.use_metric || false;
+    // Prepare flat data structure for ha-form
+    const formData = {
+      status_entity: (this._config.entities && this._config.entities[0]) || "",
+      litter_entity: (this._config.entities && this._config.entities[1]) || "",
+      waste_entity: (this._config.entities && this._config.entities[2]) || "",
+      hopper_entity: (this._config.entities && this._config.entities[3]) || "",
+      pet_weight_entities: this._config.pet_weight_entities || [],
+      language: this._config.language || "en",
+      use_metric: this._config.use_metric || false
+    };
 
-    const labels = [
-      "Status Code Entity (required)", 
-      "Litter Level Entity (required)", 
-      "Waste Drawer Entity (required)", 
-      "Litter Hopper Entity (optional)"
+    // Define the schema for ha-form using modern selectors
+    const schema = [
+      {
+        name: "status_entity",
+        selector: { 
+          entity: { 
+            domain: "sensor",
+            multiple: false
+          } 
+        }
+      },
+      {
+        name: "litter_entity", 
+        selector: { 
+          entity: { 
+            domain: "sensor",
+            multiple: false
+          } 
+        }
+      },
+      {
+        name: "waste_entity",
+        selector: { 
+          entity: { 
+            domain: "sensor",
+            multiple: false
+          } 
+        }
+      },
+      {
+        name: "hopper_entity",
+        selector: { 
+          entity: { 
+            domain: "sensor",
+            multiple: false
+          } 
+        }
+      },
+      {
+        name: "pet_weight_entities",
+        selector: { 
+          entity: { 
+            domain: "sensor",
+            multiple: true
+          } 
+        }
+      },
+      {
+        name: "language",
+        selector: { 
+          select: { 
+            options: [
+              { label: "English", value: "en" },
+              { label: "Spanish", value: "es" },
+              { label: "Dutch", value: "nl" },
+              { label: "French", value: "fr" }
+            ]
+          } 
+        }
+      },
+      {
+        name: "use_metric",
+        selector: { boolean: {} }
+      }
     ];
-
-    // Get all sensor entities
-    const sensorEntities = Object.keys(this._hass.states || {})
-      .filter(entityId => entityId.startsWith('sensor.'))
-      .sort();
 
     this.innerHTML = `
       <style>
@@ -567,193 +635,33 @@ class LitterRobot4Editor extends HTMLElement {
           border-bottom: 1px solid var(--divider-color);
           padding-bottom: 4px;
         }
-        .entity {
+        .required-note {
+          font-size: 0.9rem;
+          color: var(--secondary-text-color);
           margin-bottom: 16px;
-        }
-        .entity label {
-          display: block;
-          margin-bottom: 8px;
-          font-weight: 500;
-          color: var(--primary-text-color);
-        }
-        .entity select, .entity input {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid var(--divider-color, #ccc);
-          border-radius: 4px;
-          background: var(--card-background-color, white);
-          color: var(--primary-text-color, black);
-          font-size: 14px;
-          box-sizing: border-box;
-        }
-        .entity select:focus, .entity input:focus {
-          outline: none;
-          border-color: var(--primary-color, #03a9f4);
-        }
-        .required {
-          color: var(--error-color, #f44336);
-        }
-        .pet-weight-item {
-          display: flex;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-        .pet-weight-item select {
-          flex: 1;
-          margin-right: 8px;
-        }
-        .remove-btn {
-          background: var(--error-color, #f44336);
-          color: white;
-          border: none;
-          border-radius: 4px;
-          padding: 8px 12px;
-          cursor: pointer;
-          font-size: 12px;
-        }
-        .add-btn {
-          background: var(--primary-color, #03a9f4);
-          color: white;
-          border: none;
-          border-radius: 4px;
-          padding: 8px 16px;
-          cursor: pointer;
-          font-size: 14px;
-          margin-top: 8px;
-        }
-        .checkbox-container {
-          display: flex;
-          align-items: center;
-          margin-bottom: 16px;
-        }
-        .checkbox-container input[type="checkbox"] {
-          width: auto;
-          margin-right: 8px;
+          font-style: italic;
         }
       </style>
       <div class="card-config">
-        
         <div class="section">
-          <div class="section-title">Required Entities</div>
-          ${labels.slice(0, 3).map((label, index) => `
-            <div class="entity">
-              <label>
-                ${label}
-                <span class="required">*</span>
-              </label>
-              <select data-index="${index}">
-                <option value="">Select entity...</option>
-                ${sensorEntities.map(entityId => `
-                  <option value="${entityId}" ${entities[index] === entityId ? 'selected' : ''}>
-                    ${this._hass.states[entityId].attributes.friendly_name || entityId}
-                  </option>
-                `).join('')}
-              </select>
-            </div>
-          `).join('')}
-        </div>
-
-        <div class="section">
-          <div class="section-title">Optional Entities</div>
-          <div class="entity">
-            <label>${labels[3]}</label>
-            <select data-index="3">
-              <option value="">Select entity...</option>
-              ${sensorEntities.map(entityId => `
-                <option value="${entityId}" ${entities[3] === entityId ? 'selected' : ''}>
-                  ${this._hass.states[entityId].attributes.friendly_name || entityId}
-                </option>
-              `).join('')}
-            </select>
+          <div class="section-title">Litter-Robot 4 Card Configuration</div>
+          <div class="required-note">
+            Configure the entities for your Litter-Robot 4. The first three entities are required for the card to function properly.
           </div>
         </div>
-
-        <div class="section">
-          <div class="section-title">Pet Weight Entities</div>
-          <div id="pet-weights">
-            ${petWeightEntities.map((entityId, index) => `
-              <div class="pet-weight-item">
-                <select data-pet-index="${index}">
-                  <option value="">Select pet weight entity...</option>
-                  ${sensorEntities.map(sensorId => `
-                    <option value="${sensorId}" ${entityId === sensorId ? 'selected' : ''}>
-                      ${this._hass.states[sensorId].attributes.friendly_name || sensorId}
-                    </option>
-                  `).join('')}
-                </select>
-                <button class="remove-btn" data-remove-pet="${index}">Remove</button>
-              </div>
-            `).join('')}
-          </div>
-          <button class="add-btn" id="add-pet-weight">Add Pet Weight Entity</button>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Settings</div>
-          
-          <div class="entity">
-            <label>Language</label>
-            <select id="language-select">
-              <option value="en" ${language === 'en' ? 'selected' : ''}>English</option>
-              <option value="es" ${language === 'es' ? 'selected' : ''}>Spanish</option>
-              <option value="nl" ${language === 'nl' ? 'selected' : ''}>Dutch</option>
-              <option value="fr" ${language === 'fr' ? 'selected' : ''}>French</option>
-            </select>
-          </div>
-
-          <div class="checkbox-container">
-            <input type="checkbox" id="use-metric" ${useMetric ? 'checked' : ''}>
-            <label for="use-metric">Use metric units (kg instead of lbs)</label>
-          </div>
-        </div>
-
       </div>
     `;
 
-    // Add event listeners after the HTML is set
-    this.querySelectorAll('select[data-index]').forEach(select => {
-      select.addEventListener('change', (event) => {
-        const index = parseInt(event.target.getAttribute('data-index'));
-        const value = event.target.value;
-        this._valueChanged(index, value);
-      });
-    });
+    // Create and append the ha-form element
+    const formElement = document.createElement("ha-form");
+    formElement.hass = this._hass;
+    formElement.data = formData;
+    formElement.schema = schema;
+    formElement.computeLabel = this._computeLabel.bind(this);
+    
+    formElement.addEventListener("value-changed", this._valueChanged.bind(this));
 
-    this.querySelectorAll('select[data-pet-index]').forEach(select => {
-      select.addEventListener('change', (event) => {
-        const index = parseInt(event.target.getAttribute('data-pet-index'));
-        const value = event.target.value;
-        this._petWeightChanged(index, value);
-      });
-    });
-
-    this.querySelectorAll('button[data-remove-pet]').forEach(button => {
-      button.addEventListener('click', (event) => {
-        const index = parseInt(event.target.getAttribute('data-remove-pet'));
-        this._removePetWeight(index);
-      });
-    });
-
-    const addButton = this.querySelector('#add-pet-weight');
-    if (addButton) {
-      addButton.addEventListener('click', () => {
-        this._addPetWeight();
-      });
-    }
-
-    const languageSelect = this.querySelector('#language-select');
-    if (languageSelect) {
-      languageSelect.addEventListener('change', (event) => {
-        this._languageChanged(event.target.value);
-      });
-    }
-
-    const metricCheckbox = this.querySelector('#use-metric');
-    if (metricCheckbox) {
-      metricCheckbox.addEventListener('change', (event) => {
-        this._metricChanged(event.target.checked);
-      });
-    }
+    this.querySelector(".card-config").appendChild(formElement);
   }
 }
 
