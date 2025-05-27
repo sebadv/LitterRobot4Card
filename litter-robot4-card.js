@@ -439,7 +439,7 @@ class LitterRobot4Editor extends HTMLElement {
   constructor() {
     super();
     this.config = {};
-    this.hass = {};
+    this._hass = {};
   }
 
   setConfig(config) {
@@ -460,8 +460,12 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   set hass(hass) {
-    this.hass = hass;
+    this._hass = hass;
     this._updateEditor();
+  }
+
+  get hass() {
+    return this._hass;
   }
 
   _valueChanged(index, value) {
@@ -521,7 +525,7 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _updateEditor() {
-    if (!this.hass) {
+    if (!this._hass) {
       this.innerHTML = `
         <div style="padding: 16px; text-align: center;">
           <div>Loading...</div>
@@ -543,7 +547,7 @@ class LitterRobot4Editor extends HTMLElement {
     ];
 
     // Get all sensor entities
-    const sensorEntities = Object.keys(this.hass.states || {})
+    const sensorEntities = Object.keys(this._hass.states || {})
       .filter(entityId => entityId.startsWith('sensor.'))
       .sort();
 
@@ -641,7 +645,7 @@ class LitterRobot4Editor extends HTMLElement {
                 <option value="">Select entity...</option>
                 ${sensorEntities.map(entityId => `
                   <option value="${entityId}" ${entities[index] === entityId ? 'selected' : ''}>
-                    ${this.hass.states[entityId].attributes.friendly_name || entityId}
+                    ${this._hass.states[entityId].attributes.friendly_name || entityId}
                   </option>
                 `).join('')}
               </select>
@@ -657,7 +661,7 @@ class LitterRobot4Editor extends HTMLElement {
               <option value="">Select entity...</option>
               ${sensorEntities.map(entityId => `
                 <option value="${entityId}" ${entities[3] === entityId ? 'selected' : ''}>
-                  ${this.hass.states[entityId].attributes.friendly_name || entityId}
+                  ${this._hass.states[entityId].attributes.friendly_name || entityId}
                 </option>
               `).join('')}
             </select>
@@ -673,7 +677,7 @@ class LitterRobot4Editor extends HTMLElement {
                   <option value="">Select pet weight entity...</option>
                   ${sensorEntities.map(sensorId => `
                     <option value="${sensorId}" ${entityId === sensorId ? 'selected' : ''}>
-                      ${this.hass.states[sensorId].attributes.friendly_name || sensorId}
+                      ${this._hass.states[sensorId].attributes.friendly_name || sensorId}
                     </option>
                   `).join('')}
                 </select>
