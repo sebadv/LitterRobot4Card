@@ -475,16 +475,153 @@ class LitterRobot4Editor extends HTMLElement {
     return this._hass;
   }
 
+  _updateEditor() {
+    if (!this._hass || !this._config) return;
+
+    // Create container div to prevent event bubbling issues
+    this.innerHTML = `
+      <div class="editor-container" style="padding: 16px;">
+        <ha-form
+          .hass=${this._hass}
+          .data=${this._config}
+          .schema=${this._getSchema()}
+          .computeLabel=${this._computeLabel.bind(this)}
+        ></ha-form>
+      </div>
+    `;
+
+    // Get the ha-form element and add proper event handling
+    const haForm = this.querySelector('ha-form');
+    if (haForm) {
+      // Add event listener with proper event handling
+      haForm.addEventListener('value-changed', (ev) => {
+        // Stop event propagation to prevent dropdown closing
+        ev.stopPropagation();
+        this._valueChanged(ev);
+      });
+
+      // Prevent clicks inside the form from bubbling up
+      haForm.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+      });
+
+      // Prevent mousedown events from bubbling up (important for dropdowns)
+      haForm.addEventListener('mousedown', (ev) => {
+        ev.stopPropagation();
+      });
+    }
+  }
+
+  _getSchema() {
+    const entityOptions = this._hass ? Object.keys(this._hass.states).map(entityId => ({
+      value: entityId,
+      label: `${this._hass.states[entityId].attributes.friendly_name || entityId} (${entityId})`
+    })) : [];
+
+    return [
+      {
+        name: "entities",
+        type: "grid",
+        schema: [
+          {
+            name: "0",
+            required: true,
+            selector: {
+              entity: {
+                multiple: false,
+                filter: [
+                  { domain: "sensor" },
+                  { domain: "binary_sensor" }
+                ]
+              }
+            }
+          },
+          {
+            name: "1", 
+            required: true,
+            selector: {
+              entity: {
+                multiple: false,
+                filter: [
+                  { domain: "sensor" },
+                  { domain: "binary_sensor" }
+                ]
+              }
+            }
+          },
+          {
+            name: "2",
+            required: true,
+            selector: {
+              entity: {
+                multiple: false,
+                filter: [
+                  { domain: "sensor" },
+                  { domain: "binary_sensor" }
+                ]
+              }
+            }
+          },
+          {
+            name: "3",
+            selector: {
+              entity: {
+                multiple: false,
+                filter: [
+                  { domain: "sensor" },
+                  { domain: "binary_sensor" }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        name: "pet_weight_entities",
+        selector: {
+          entity: {
+            multiple: true,
+            filter: [
+              { domain: "sensor" },
+              { domain: "binary_sensor" }
+            ]
+          }
+        }
+      },
+      {
+        name: "language",
+        selector: {
+          select: {
+            options: [
+              { value: "en", label: "English" },
+              { value: "es", label: "Español" },
+              { value: "nl", label: "Nederlands" },
+              { value: "fr", label: "Français" }
+            ]
+          }
+        }
+      },
+      {
+        name: "use_metric",
+        selector: {
+          boolean: {}
+        }
+      }
+    ];
+  }
+
   _computeLabel(schema) {
-    const labelMap = {
-      status_entity: "Status Code Entity (required)",
-      litter_entity: "Litter Level Entity (required)", 
-      waste_entity: "Waste Drawer Entity (required)",
-      hopper_entity: "Litter Hopper Entity (optional)",
+    const labels = {
+      entities: "Required Entities",
+      "0": "Status Code Entity (Required)",
+      "1": "Litter Level Entity (Required)", 
+      "2": "Waste Drawer Entity (Required)",
+      "3": "Litter Hopper Entity (Optional)",
+      pet_weight_entities: "Pet Weight Entities (Optional)",
       language: "Language",
-      use_metric: "Use metric units (kg instead of lbs)"
+      use_metric: "Use Metric Units (kg)"
     };
-    return labelMap[schema.name] || schema.name;
+    return labels[schema.name] || schema.name;
   }
 
   _valueChanged(ev) {
@@ -492,176 +629,31 @@ class LitterRobot4Editor extends HTMLElement {
       return;
     }
 
-    const newConfig = { ...this._config };
-    const value = ev.detail.value;
+    // Stop propagation to prevent dropdown closing
+    ev.stopPropagation();
+    ev.preventDefault();
 
-    // Map the flat form data back to the nested structure
-    if (value.status_entity !== undefined) {
-      newConfig.entities = newConfig.entities || ["", "", "", ""];
-      newConfig.entities[0] = value.status_entity || "";
-    }
-    if (value.litter_entity !== undefined) {
-      newConfig.entities = newConfig.entities || ["", "", "", ""];
-      newConfig.entities[1] = value.litter_entity || "";
-    }
-    if (value.waste_entity !== undefined) {
-      newConfig.entities = newConfig.entities || ["", "", "", ""];
-      newConfig.entities[2] = value.waste_entity || "";
-    }
-    if (value.hopper_entity !== undefined) {
-      newConfig.entities = newConfig.entities || ["", "", "", ""];
-      newConfig.entities[3] = value.hopper_entity || "";
-    }
-    if (value.pet_weight_entities !== undefined) {
-      newConfig.pet_weight_entities = value.pet_weight_entities || [];
-    }
-    if (value.language !== undefined) {
-      newConfig.language = value.language;
-    }
-    if (value.use_metric !== undefined) {
-      newConfig.use_metric = value.use_metric;
+    const newConfig = { ...this._config, ...ev.detail.value };
+    
+    // Ensure entities array format
+    if (newConfig.entities && typeof newConfig.entities === 'object' && !Array.isArray(newConfig.entities)) {
+      newConfig.entities = [
+        newConfig.entities["0"] || "",
+        newConfig.entities["1"] || "",
+        newConfig.entities["2"] || "",
+        newConfig.entities["3"] || ""
+      ];
     }
 
     this._config = newConfig;
 
+    // Dispatch config-changed event
     const event = new CustomEvent("config-changed", {
-      detail: { config: newConfig },
+      detail: { config: this._config },
       bubbles: true,
       composed: true,
     });
     this.dispatchEvent(event);
-  }
-
-  _updateEditor() {
-    if (!this._hass) {
-      this.innerHTML = `
-        <div style="padding: 16px; text-align: center;">
-          <div>Loading...</div>
-        </div>
-      `;
-      return;
-    }
-
-    // Prepare flat data structure for ha-form
-    const formData = {
-      status_entity: (this._config.entities && this._config.entities[0]) || "",
-      litter_entity: (this._config.entities && this._config.entities[1]) || "",
-      waste_entity: (this._config.entities && this._config.entities[2]) || "",
-      hopper_entity: (this._config.entities && this._config.entities[3]) || "",
-      pet_weight_entities: this._config.pet_weight_entities || [],
-      language: this._config.language || "en",
-      use_metric: this._config.use_metric || false
-    };
-
-    // Define the schema for ha-form using modern selectors
-    const schema = [
-      {
-        name: "status_entity",
-        selector: { 
-          entity: { 
-            domain: "sensor",
-            multiple: false
-          } 
-        }
-      },
-      {
-        name: "litter_entity", 
-        selector: { 
-          entity: { 
-            domain: "sensor",
-            multiple: false
-          } 
-        }
-      },
-      {
-        name: "waste_entity",
-        selector: { 
-          entity: { 
-            domain: "sensor",
-            multiple: false
-          } 
-        }
-      },
-      {
-        name: "hopper_entity",
-        selector: { 
-          entity: { 
-            domain: "sensor",
-            multiple: false
-          } 
-        }
-      },
-      {
-        name: "pet_weight_entities",
-        selector: { 
-          entity: { 
-            domain: "sensor",
-            multiple: true
-          } 
-        }
-      },
-      {
-        name: "language",
-        selector: { 
-          select: { 
-            options: [
-              { label: "English", value: "en" },
-              { label: "Spanish", value: "es" },
-              { label: "Dutch", value: "nl" },
-              { label: "French", value: "fr" }
-            ]
-          } 
-        }
-      },
-      {
-        name: "use_metric",
-        selector: { boolean: {} }
-      }
-    ];
-
-    this.innerHTML = `
-      <style>
-        .card-config {
-          padding: 16px;
-        }
-        .section {
-          margin-bottom: 24px;
-        }
-        .section-title {
-          font-size: 1.1rem;
-          font-weight: bold;
-          margin-bottom: 12px;
-          color: var(--primary-text-color);
-          border-bottom: 1px solid var(--divider-color);
-          padding-bottom: 4px;
-        }
-        .required-note {
-          font-size: 0.9rem;
-          color: var(--secondary-text-color);
-          margin-bottom: 16px;
-          font-style: italic;
-        }
-      </style>
-      <div class="card-config">
-        <div class="section">
-          <div class="section-title">Litter-Robot 4 Card Configuration</div>
-          <div class="required-note">
-            Configure the entities for your Litter-Robot 4. The first three entities are required for the card to function properly.
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Create and append the ha-form element
-    const formElement = document.createElement("ha-form");
-    formElement.hass = this._hass;
-    formElement.data = formData;
-    formElement.schema = schema;
-    formElement.computeLabel = this._computeLabel.bind(this);
-    
-    formElement.addEventListener("value-changed", this._valueChanged.bind(this));
-
-    this.querySelector(".card-config").appendChild(formElement);
   }
 }
 
