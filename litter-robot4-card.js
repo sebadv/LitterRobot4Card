@@ -491,7 +491,14 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   disconnectedCallback() {
+    console.warn(`💥 Editor removed from DOM! Instance ${this._instanceId} - This indicates HA is destroying the editor`);
     console.debug(`🔌 LitterRobot4Editor disconnectedCallback - Instance ${this._instanceId} - Removing global event listeners`);
+    
+    // Clear any pending config change debounce
+    if (this._configChangedDebounce) {
+      clearTimeout(this._configChangedDebounce);
+      console.debug(`🕐 Cleared pending config change debounce for instance ${this._instanceId}`);
+    }
     
     // Clean up global event listeners when element is removed
     window.removeEventListener('click', this._interceptOutsideClicks, true);
@@ -849,6 +856,8 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _updateConfig(key, value) {
+    console.debug(`🔧 Config update requested - Instance ${this._instanceId} - Key: ${key}, Value: ${value}`);
+    
     const newConfig = { ...this._config };
     
     if (key.startsWith('entities.')) {
@@ -860,16 +869,34 @@ class LitterRobot4Editor extends HTMLElement {
     }
     
     this._config = newConfig;
-    this._fireConfigChanged();
+    
+    // CRITICAL FIX: Debounce config-changed to prevent looping re-renders
+    console.debug(`⏱️ Debouncing config-changed event - Instance ${this._instanceId}`);
+    
+    // Clear any existing debounce timer
+    if (this._configChangedDebounce) {
+      clearTimeout(this._configChangedDebounce);
+    }
+    
+    // Set new debounce timer - only fire config-changed after 200ms of no changes
+    this._configChangedDebounce = setTimeout(() => {
+      console.debug(`🚀 Firing debounced config-changed - Instance ${this._instanceId}`);
+      this._fireConfigChanged();
+    }, 200);
   }
 
   _fireConfigChanged() {
+    console.debug(`📤 Firing config-changed event - Instance ${this._instanceId}`);
+    
     const event = new CustomEvent("config-changed", {
       detail: { config: this._config },
       bubbles: true,
       composed: true,
     });
     this.dispatchEvent(event);
+    
+    // Clear the debounce timer since we've fired the event
+    this._configChangedDebounce = null;
   }
 }
 
