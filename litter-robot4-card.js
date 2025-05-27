@@ -443,14 +443,6 @@ class LitterRobot4Editor extends HTMLElement {
     super();
     this._config = {};
     this._hass = {};
-    this._isUpdating = false; // Flag to prevent recursive updates
-  }
-
-  static get properties() {
-    return {
-      hass: {},
-      _config: {},
-    };
   }
 
   setConfig(config) {
@@ -467,208 +459,247 @@ class LitterRobot4Editor extends HTMLElement {
     if (!this._config.use_metric) {
       this._config.use_metric = false;
     }
-    this._updateEditor();
+    this._render();
   }
 
   set hass(hass) {
-    // Prevent recursive calls
-    if (this._isUpdating) return;
-    
     this._hass = hass;
-    this._updateEditor();
+    this._render();
   }
 
   get hass() {
     return this._hass;
   }
 
-  _updateEditor() {
-    if (!this._hass || !this._config || this._isUpdating) return;
+  _render() {
+    if (!this._hass || !this._config) return;
 
-    // Set flag to prevent recursive updates
-    this._isUpdating = true;
-
-    try {
-      // Clear existing content
-      this.innerHTML = '';
-
-      // Create container div
-      const container = document.createElement('div');
-      container.className = 'editor-container';
-      container.style.padding = '16px';
-
-      // Create ha-form element properly
-      const haForm = document.createElement('ha-form');
-      
-      // Set properties directly on the element (but carefully to avoid recursion)
-      Object.defineProperty(haForm, '_hass', { value: this._hass, writable: true });
-      haForm.hass = this._hass;
-      haForm.data = this._config;
-      haForm.schema = this._getSchema();
-      haForm.computeLabel = this._computeLabel.bind(this);
-
-      // Add proper event handling
-      haForm.addEventListener('value-changed', (ev) => {
-        // Stop event propagation to prevent dropdown closing
-        ev.stopPropagation();
-        this._valueChanged(ev);
-      });
-
-      // Prevent clicks inside the form from bubbling up
-      haForm.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-      });
-
-      // Prevent mousedown events from bubbling up (important for dropdowns)
-      haForm.addEventListener('mousedown', (ev) => {
-        ev.stopPropagation();
-      });
-
-      // Add the form to the container and container to the editor
-      container.appendChild(haForm);
-      this.appendChild(container);
-    } finally {
-      // Always reset the flag
-      this._isUpdating = false;
-    }
-  }
-
-  _getSchema() {
-    const entityOptions = this._hass ? Object.keys(this._hass.states).map(entityId => ({
-      value: entityId,
-      label: `${this._hass.states[entityId].attributes.friendly_name || entityId} (${entityId})`
-    })) : [];
-
-    return [
-      {
-        name: "entities",
-        type: "grid",
-        schema: [
-          {
-            name: "0",
-            required: true,
-            selector: {
-              entity: {
-                multiple: false,
-                filter: [
-                  { domain: "sensor" },
-                  { domain: "binary_sensor" }
-                ]
-              }
-            }
-          },
-          {
-            name: "1", 
-            required: true,
-            selector: {
-              entity: {
-                multiple: false,
-                filter: [
-                  { domain: "sensor" },
-                  { domain: "binary_sensor" }
-                ]
-              }
-            }
-          },
-          {
-            name: "2",
-            required: true,
-            selector: {
-              entity: {
-                multiple: false,
-                filter: [
-                  { domain: "sensor" },
-                  { domain: "binary_sensor" }
-                ]
-              }
-            }
-          },
-          {
-            name: "3",
-            selector: {
-              entity: {
-                multiple: false,
-                filter: [
-                  { domain: "sensor" },
-                  { domain: "binary_sensor" }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      {
-        name: "pet_weight_entities",
-        selector: {
-          entity: {
-            multiple: true,
-            filter: [
-              { domain: "sensor" },
-              { domain: "binary_sensor" }
-            ]
-          }
-        }
-      },
-      {
-        name: "language",
-        selector: {
-          select: {
-            options: [
-              { value: "en", label: "English" },
-              { value: "es", label: "Español" },
-              { value: "nl", label: "Nederlands" },
-              { value: "fr", label: "Français" }
-            ]
-          }
-        }
-      },
-      {
-        name: "use_metric",
-        selector: {
-          boolean: {}
-        }
-      }
-    ];
-  }
-
-  _computeLabel(schema) {
-    const labels = {
-      entities: "Required Entities",
-      "0": "Status Code Entity (Required)",
-      "1": "Litter Level Entity (Required)", 
-      "2": "Waste Drawer Entity (Required)",
-      "3": "Litter Hopper Entity (Optional)",
-      pet_weight_entities: "Pet Weight Entities (Optional)",
-      language: "Language",
-      use_metric: "Use Metric Units (kg)"
-    };
-    return labels[schema.name] || schema.name;
-  }
-
-  _valueChanged(ev) {
-    if (!this._config || !this._hass) {
-      return;
-    }
-
-    // Stop propagation to prevent dropdown closing
-    ev.stopPropagation();
-    ev.preventDefault();
-
-    const newConfig = { ...this._config, ...ev.detail.value };
+    const entities = Object.keys(this._hass.states).sort();
     
-    // Ensure entities array format
-    if (newConfig.entities && typeof newConfig.entities === 'object' && !Array.isArray(newConfig.entities)) {
-      newConfig.entities = [
-        newConfig.entities["0"] || "",
-        newConfig.entities["1"] || "",
-        newConfig.entities["2"] || "",
-        newConfig.entities["3"] || ""
-      ];
+    this.innerHTML = `
+      <div style="padding: 16px; font-family: var(--paper-font-body1_-_font-family);">
+        <style>
+          .config-section {
+            margin-bottom: 24px;
+          }
+          .config-section h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--primary-text-color);
+          }
+          .config-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+          }
+          .config-label {
+            min-width: 200px;
+            font-size: 14px;
+            color: var(--primary-text-color);
+          }
+          .config-label.required::after {
+            content: " *";
+            color: red;
+          }
+          .config-input {
+            flex: 1;
+            margin-left: 12px;
+          }
+          select, input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            background: var(--card-background-color);
+            color: var(--primary-text-color);
+            font-size: 14px;
+          }
+          select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+          }
+          .pet-weight-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+          }
+          .pet-weight-item select {
+            flex: 1;
+            margin-right: 8px;
+          }
+          .remove-btn {
+            padding: 4px 8px;
+            background: var(--error-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+          }
+          .add-btn {
+            padding: 8px 16px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+          }
+        </style>
+
+        <div class="config-section">
+          <h3>Required Entities</h3>
+          
+          <div class="config-row">
+            <label class="config-label required">Status Code Entity</label>
+            <div class="config-input">
+              <select data-config-key="entities.0">
+                <option value="">Select entity...</option>
+                ${entities.map(entityId => `
+                  <option value="${entityId}" ${this._config.entities[0] === entityId ? 'selected' : ''}>
+                    ${this._hass.states[entityId].attributes.friendly_name || entityId} (${entityId})
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="config-row">
+            <label class="config-label required">Litter Level Entity</label>
+            <div class="config-input">
+              <select data-config-key="entities.1">
+                <option value="">Select entity...</option>
+                ${entities.map(entityId => `
+                  <option value="${entityId}" ${this._config.entities[1] === entityId ? 'selected' : ''}>
+                    ${this._hass.states[entityId].attributes.friendly_name || entityId} (${entityId})
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="config-row">
+            <label class="config-label required">Waste Drawer Entity</label>
+            <div class="config-input">
+              <select data-config-key="entities.2">
+                <option value="">Select entity...</option>
+                ${entities.map(entityId => `
+                  <option value="${entityId}" ${this._config.entities[2] === entityId ? 'selected' : ''}>
+                    ${this._hass.states[entityId].attributes.friendly_name || entityId} (${entityId})
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="config-row">
+            <label class="config-label">Litter Hopper Entity (Optional)</label>
+            <div class="config-input">
+              <select data-config-key="entities.3">
+                <option value="">Select entity...</option>
+                ${entities.map(entityId => `
+                  <option value="${entityId}" ${this._config.entities[3] === entityId ? 'selected' : ''}>
+                    ${this._hass.states[entityId].attributes.friendly_name || entityId} (${entityId})
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Pet Weight Entities (Optional)</h3>
+          <div id="pet-weights">
+            ${(this._config.pet_weight_entities || []).map((entityId, index) => `
+              <div class="pet-weight-item">
+                <select data-config-key="pet_weight_entities.${index}">
+                  <option value="">Select entity...</option>
+                  ${entities.map(eid => `
+                    <option value="${eid}" ${entityId === eid ? 'selected' : ''}>
+                      ${this._hass.states[eid].attributes.friendly_name || eid} (${eid})
+                    </option>
+                  `).join('')}
+                </select>
+                <button class="remove-btn" onclick="this.getRootNode().host._removePetWeight(${index})">Remove</button>
+              </div>
+            `).join('')}
+          </div>
+          <button class="add-btn" onclick="this.getRootNode().host._addPetWeight()">Add Pet Weight Entity</button>
+        </div>
+
+        <div class="config-section">
+          <h3>Settings</h3>
+          
+          <div class="config-row">
+            <label class="config-label">Language</label>
+            <div class="config-input">
+              <select data-config-key="language">
+                <option value="en" ${this._config.language === 'en' ? 'selected' : ''}>English</option>
+                <option value="es" ${this._config.language === 'es' ? 'selected' : ''}>Español</option>
+                <option value="nl" ${this._config.language === 'nl' ? 'selected' : ''}>Nederlands</option>
+                <option value="fr" ${this._config.language === 'fr' ? 'selected' : ''}>Français</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="config-row">
+            <label class="config-label">Use Metric Units (kg)</label>
+            <div class="config-input">
+              <input type="checkbox" data-config-key="use_metric" ${this._config.use_metric ? 'checked' : ''}>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add event listeners
+    this.querySelectorAll('select, input').forEach(element => {
+      element.addEventListener('change', (e) => this._handleChange(e));
+    });
+  }
+
+  _handleChange(event) {
+    const key = event.target.getAttribute('data-config-key');
+    const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    
+    const newConfig = { ...this._config };
+    
+    if (key.includes('.')) {
+      const [mainKey, subKey] = key.split('.');
+      if (mainKey === 'entities') {
+        newConfig.entities = [...(newConfig.entities || ["", "", "", ""])];
+        newConfig.entities[parseInt(subKey)] = value;
+      } else if (mainKey === 'pet_weight_entities') {
+        newConfig.pet_weight_entities = [...(newConfig.pet_weight_entities || [])];
+        newConfig.pet_weight_entities[parseInt(subKey)] = value;
+      }
+    } else {
+      newConfig[key] = value;
     }
-
+    
     this._config = newConfig;
+    this._fireConfigChanged();
+  }
 
-    // Dispatch config-changed event
+  _addPetWeight() {
+    const newConfig = { ...this._config };
+    newConfig.pet_weight_entities = [...(newConfig.pet_weight_entities || []), ""];
+    this._config = newConfig;
+    this._render();
+    this._fireConfigChanged();
+  }
+
+  _removePetWeight(index) {
+    const newConfig = { ...this._config };
+    newConfig.pet_weight_entities = [...(newConfig.pet_weight_entities || [])];
+    newConfig.pet_weight_entities.splice(index, 1);
+    this._config = newConfig;
+    this._render();
+    this._fireConfigChanged();
+  }
+
+  _fireConfigChanged() {
     const event = new CustomEvent("config-changed", {
       detail: { config: this._config },
       bubbles: true,
