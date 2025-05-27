@@ -459,17 +459,15 @@ class LitterRobot4Editor extends HTMLElement {
   connectedCallback() {
     // Add global event interceptors when element is connected to DOM
     window.addEventListener('click', this._interceptOutsideClicks, true);
-    window.addEventListener('focus', this._interceptOutsideClicks, true);
     window.addEventListener('mousedown', this._interceptOutsideClicks, true);
-    window.addEventListener('mouseup', this._interceptOutsideClicks, true);
+    window.addEventListener('focusin', this._interceptOutsideClicks, true);
   }
 
   disconnectedCallback() {
     // Clean up global event listeners when element is removed
     window.removeEventListener('click', this._interceptOutsideClicks, true);
-    window.removeEventListener('focus', this._interceptOutsideClicks, true);
     window.removeEventListener('mousedown', this._interceptOutsideClicks, true);
-    window.removeEventListener('mouseup', this._interceptOutsideClicks, true);
+    window.removeEventListener('focusin', this._interceptOutsideClicks, true);
   }
 
   _interceptOutsideClicks(ev) {
@@ -479,28 +477,27 @@ class LitterRobot4Editor extends HTMLElement {
     // Define elements that should be allowed to function normally
     const allowedTags = ['SELECT', 'OPTION', 'INPUT', 'LABEL', 'MDC-MENU', 'MDC-LIST', 'HA-TEXTFIELD', 'HA-ENTITY-PICKER'];
     
-    // Check if the event target is an allowed interactive element
-    const isAllowedElement = path.some(el => {
-      return el && el.tagName && allowedTags.includes(el.tagName);
+    // Check if the event is inside our editor (clearly separated)
+    const isInsideEditor = path.some(el => {
+      return el && el.tagName === 'LITTER-ROBOT4-EDITOR';
     });
     
-    // Check if the event path includes our editor element
-    const insideEditor = path.some(el => {
-      return el && el.tagName === 'LITTER-ROBOT4-EDITOR' || 
-             (el && el.shadowRoot && el.shadowRoot.contains && el.shadowRoot.contains(ev.target));
+    // Check if the event target is an allowed interactive element (clearly separated)
+    const isAllowedInteractive = path.some(el => {
+      return el && el.tagName && allowedTags.includes(el.tagName);
     });
     
     // Only intercept events that are:
     // 1. Inside our editor
     // 2. NOT targeting allowed interactive elements
-    // 3. Are click events that could trigger dialog close
-    if (insideEditor && !isAllowedElement && (ev.type === 'click' || ev.type === 'mousedown')) {
+    // 3. Are events that could trigger dialog close
+    if (isInsideEditor && !isAllowedInteractive && (ev.type === 'click' || ev.type === 'mousedown' || ev.type === 'focusin')) {
       // Event originated from inside our editor but not from an interactive element
       // Stop it from reaching HA's dialog handlers
       ev.stopPropagation();
       ev.stopImmediatePropagation();
       
-      console.debug('Intercepted non-interactive click to prevent dialog close');
+      console.debug(`Intercepted ${ev.type} event to prevent dialog close`);
     }
   }
 
