@@ -3,7 +3,7 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-import { LitElement as nt } from 'lit';
+import LitElement from 'lit';
 // Translation variables
 var ht = {title: "Litter-Robot 4", litter: "Litter", waste: "Waste", full: "Full", pet_weight: "Pet Weight", hopper: "Litter Hopper"};
 var hopper_en = {enabled: "Enabled", disabled: "Disabled", empty: "Empty", motor_fault_short: "Motor Fault (Short)", motor_ot_amps: "Motor Overcurrent", motor_disconnected: "Motor Disconnected"};
@@ -38,7 +38,7 @@ try {
 } catch (t) {
   console.error("Error adding to custom cards list:", t);
 }
-class xt extends nt {
+class xt extends LitElement {
   static async getConfigElement() {
     await customElements.whenDefined("litter-robot4-editor");
     return document.createElement("litter-robot4-editor");
