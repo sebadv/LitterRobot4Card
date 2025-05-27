@@ -61,6 +61,7 @@ entities:
   - sensor.litterrobot_status_code  # Required: The status code sensor
   - sensor.litterrobot_litter_level  # Required: Litter level sensor
   - sensor.litterrobot_waste_drawer  # Required: Waste drawer sensor
+  - sensor.litterrobot_hopper        # Optional: Litter Hopper sensor
 pet_weight_entities:  # Optional: List of pet weight sensors
   - sensor.cat1_weight
   - sensor.cat2_weight
@@ -73,7 +74,7 @@ use_metric: false  # Optional: Set to true for kg instead of lbs (defaults to fa
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| entities | array | required | List of main entities in order: [status_code, litter_level, waste_drawer] |
+| entities | array | required | List of main entities in order: [status_code, litter_level, waste_drawer, hopper (optional)] |
 | pet_weight_entities | array | optional | List of pet weight sensor entities |
 | language | string | 'en' | Interface language ('en', 'es', 'nl', 'fr') |
 | use_metric | boolean | false | Set to `true` to display weight in kg instead of lbs |
@@ -106,6 +107,23 @@ The card uses color-coded indicators for different states:
   - 🟡 Yellow: 71-90%
   - 🔴 Red: > 90%
 
+- Litter Hopper Colors:
+  - 🟢 Green: Enabled
+  - ⚫ Gray: Disabled
+  - 🟡 Yellow: Empty
+  - 🔴 Red: Motor Faults (Short, Overcurrent, Disconnected)
+
+#### Litter Hopper States & Translations
+
+| State                | English         | Spanish         | Dutch                | French                        |
+|----------------------|----------------|-----------------|----------------------|-------------------------------|
+| enabled              | Enabled        | Activado        | Ingeschakeld         | Activé                        |
+| disabled             | Disabled       | Desactivado     | Uitgeschakeld        | Désactivé                     |
+| empty                | Empty          | Vacío           | Leeg                 | Vide                          |
+| motor_fault_short    | Motor Fault (Short) | Fallo del Motor (Corto) | Motor Fout (Kortsluiting) | Défaut Moteur (Court-circuit) |
+| motor_ot_amps        | Motor Overcurrent | Sobrecorriente del Motor | Motor Overstroom         | Surcharge Moteur              |
+| motor_disconnected   | Motor Disconnected | Motor Desconectado | Motor Losgekoppeld      | Moteur Déconnecté             |
+
 ## Features
 
 - Real-time status display with color indicators
@@ -116,6 +134,7 @@ The card uses color-coded indicators for different states:
 - Metric/Imperial unit conversion
 - Interactive elements (click for more details)
 - Modern, clean design that matches Home Assistant's theme
+- Litter Hopper status monitoring (optional)
 
 ## Support
 
