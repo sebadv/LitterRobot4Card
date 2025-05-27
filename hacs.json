@@ -1,0 +1,14 @@
+{
+  "name": "Litter-Robot 4 Card",
+  "content_in_root": false,
+  "filename": "litter-robot4-card.js",
+  "render_readme": true,
+  "description": "A Home Assistant Lovelace custom card for Litter-Robot 4.",
+  "documentation": "https://github.com/sebadv/LitterRobot4Card",
+  "type": "lovelace",
+  "domains": ["sensor"],
+  "country": "all",
+  "resources": [
+    "litter-robot4-card.js"
+  ]
+} 
