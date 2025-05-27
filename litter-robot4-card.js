@@ -496,10 +496,16 @@ class LitterRobot4Editor extends HTMLElement {
             display: block;
             padding: 16px;
             font-family: var(--paper-font-body1_-_font-family);
+            /* Ensure proper stacking context */
+            position: relative;
+            z-index: 1;
           }
           
           .config-section {
             margin-bottom: 24px;
+            /* Create stacking context for dropdowns */
+            position: relative;
+            z-index: 2;
           }
           
           .config-section h3 {
@@ -511,6 +517,9 @@ class LitterRobot4Editor extends HTMLElement {
           
           .config-row {
             margin-bottom: 16px;
+            /* Ensure each row has proper stacking */
+            position: relative;
+            z-index: 3;
           }
           
           .config-label {
@@ -534,11 +543,28 @@ class LitterRobot4Editor extends HTMLElement {
             color: var(--primary-text-color, black);
             font-size: 14px;
             font-family: inherit;
+            /* Critical: Ensure dropdown appears above everything */
+            position: relative;
+            z-index: 9999 !important;
+          }
+          
+          /* Fix for dropdown options appearing behind other elements */
+          select option {
+            background: var(--card-background-color, white);
+            color: var(--primary-text-color, black);
+            z-index: 10000 !important;
+          }
+          
+          /* When select is focused/opened, increase z-index even more */
+          select:focus, select:active {
+            z-index: 99999 !important;
+            position: relative;
           }
           
           input[type="checkbox"] {
             width: auto;
             margin-right: 8px;
+            z-index: auto;
           }
           
           select:focus, input:focus {
@@ -551,6 +577,15 @@ class LitterRobot4Editor extends HTMLElement {
             display: flex;
             align-items: center;
             font-weight: 500;
+          }
+          
+          /* Ensure the entire editor has high z-index in modal contexts */
+          :host(.in-modal) {
+            z-index: 100000 !important;
+          }
+          
+          :host(.in-modal) select {
+            z-index: 100001 !important;
           }
         </style>
 
@@ -642,52 +677,58 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _addEventListeners() {
-    // Add event listeners with proper event propagation handling
+    // Add event listeners with focus management to prevent dropdown closing
     const selects = this.shadowRoot.querySelectorAll('select');
     const inputs = this.shadowRoot.querySelectorAll('input');
     
     selects.forEach(select => {
-      // Prevent event propagation on all mouse and focus events
-      select.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
+      // Prevent all event bubbling that could close the dropdown
+      ['click', 'mousedown', 'mouseup', 'focus', 'blur', 'keydown', 'keyup'].forEach(eventType => {
+        select.addEventListener(eventType, (e) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }, { capture: true, passive: false });
       });
       
-      select.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      });
-      
-      select.addEventListener('focus', (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      });
-      
-      select.addEventListener('blur', (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      });
-      
-      // Handle value changes
+      // Special handling for change events
       select.addEventListener('change', (e) => {
         e.stopPropagation();
         e.stopImmediatePropagation();
         this._handleSelectChange(e);
-      });
+      }, { capture: true });
+      
+      // Prevent focus loss that causes dropdown to close
+      select.addEventListener('focusout', (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        // Only allow focusout if clicking on another select or input
+        const relatedTarget = e.relatedTarget;
+        if (relatedTarget && (relatedTarget.tagName === 'SELECT' || relatedTarget.tagName === 'INPUT')) {
+          return;
+        }
+        e.preventDefault();
+      }, { capture: true });
     });
     
     inputs.forEach(input => {
-      input.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
+      ['click', 'mousedown', 'mouseup', 'focus', 'blur'].forEach(eventType => {
+        input.addEventListener(eventType, (e) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }, { capture: true, passive: false });
       });
       
       input.addEventListener('change', (e) => {
         e.stopPropagation();
         e.stopImmediatePropagation();
         this._handleInputChange(e);
-      });
+      }, { capture: true });
     });
+    
+    // Detect if we're in a modal and add appropriate class
+    if (this.closest('ha-dialog') || this.closest('[role="dialog"]') || this.closest('.mdc-dialog')) {
+      this.classList.add('in-modal');
+    }
   }
 
   _handleSelectChange(event) {
