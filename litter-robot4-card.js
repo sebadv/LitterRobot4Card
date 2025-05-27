@@ -33,6 +33,11 @@ class LitterRobot4Card extends HTMLElement {
   }
 
   static async getConfigElement() {
+    // Ensure the editor element is defined
+    if (!customElements.get("litter-robot4-editor")) {
+      // Wait a bit for the element to be defined
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     return document.createElement("litter-robot4-editor");
   }
 
@@ -359,6 +364,9 @@ class LitterRobot4Editor extends HTMLElement {
     if (!this.config.language) {
       this.config.language = "en";
     }
+    if (!this.config.use_metric) {
+      this.config.use_metric = false;
+    }
     this._updateEditor();
   }
 
@@ -375,7 +383,46 @@ class LitterRobot4Editor extends HTMLElement {
     }
     
     this.config.entities[index] = value;
-    
+    this._fireConfigChanged();
+  }
+
+  _languageChanged(value) {
+    if (!this.config) return;
+    this.config.language = value;
+    this._fireConfigChanged();
+  }
+
+  _metricChanged(value) {
+    if (!this.config) return;
+    this.config.use_metric = value;
+    this._fireConfigChanged();
+  }
+
+  _addPetWeight() {
+    if (!this.config.pet_weight_entities) {
+      this.config.pet_weight_entities = [];
+    }
+    this.config.pet_weight_entities.push("");
+    this._fireConfigChanged();
+    this._updateEditor();
+  }
+
+  _removePetWeight(index) {
+    if (!this.config.pet_weight_entities) return;
+    this.config.pet_weight_entities.splice(index, 1);
+    this._fireConfigChanged();
+    this._updateEditor();
+  }
+
+  _petWeightChanged(index, value) {
+    if (!this.config.pet_weight_entities) {
+      this.config.pet_weight_entities = [];
+    }
+    this.config.pet_weight_entities[index] = value;
+    this._fireConfigChanged();
+  }
+
+  _fireConfigChanged() {
     const event = new CustomEvent("config-changed", {
       detail: { config: this.config },
       bubbles: true,
@@ -385,11 +432,20 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _updateEditor() {
-    if (!this.hass || !this.config) {
+    if (!this.hass) {
+      this.innerHTML = `
+        <div style="padding: 16px; text-align: center;">
+          <div>Loading...</div>
+        </div>
+      `;
       return;
     }
 
     const entities = this.config.entities || ["", "", "", ""];
+    const petWeightEntities = this.config.pet_weight_entities || [];
+    const language = this.config.language || "en";
+    const useMetric = this.config.use_metric || false;
+
     const labels = [
       "Status Code Entity (required)", 
       "Litter Level Entity (required)", 
@@ -407,6 +463,17 @@ class LitterRobot4Editor extends HTMLElement {
         .card-config {
           padding: 16px;
         }
+        .section {
+          margin-bottom: 24px;
+        }
+        .section-title {
+          font-size: 1.1rem;
+          font-weight: bold;
+          margin-bottom: 12px;
+          color: var(--primary-text-color);
+          border-bottom: 1px solid var(--divider-color);
+          padding-bottom: 4px;
+        }
         .entity {
           margin-bottom: 16px;
         }
@@ -416,7 +483,7 @@ class LitterRobot4Editor extends HTMLElement {
           font-weight: 500;
           color: var(--primary-text-color);
         }
-        .entity select {
+        .entity select, .entity input {
           width: 100%;
           padding: 8px 12px;
           border: 1px solid var(--divider-color, #ccc);
@@ -424,22 +491,62 @@ class LitterRobot4Editor extends HTMLElement {
           background: var(--card-background-color, white);
           color: var(--primary-text-color, black);
           font-size: 14px;
+          box-sizing: border-box;
         }
-        .entity select:focus {
+        .entity select:focus, .entity input:focus {
           outline: none;
           border-color: var(--primary-color, #03a9f4);
         }
         .required {
           color: var(--error-color, #f44336);
         }
+        .pet-weight-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        .pet-weight-item select {
+          flex: 1;
+          margin-right: 8px;
+        }
+        .remove-btn {
+          background: var(--error-color, #f44336);
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 8px 12px;
+          cursor: pointer;
+          font-size: 12px;
+        }
+        .add-btn {
+          background: var(--primary-color, #03a9f4);
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 8px 16px;
+          cursor: pointer;
+          font-size: 14px;
+          margin-top: 8px;
+        }
+        .checkbox-container {
+          display: flex;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+        .checkbox-container input[type="checkbox"] {
+          width: auto;
+          margin-right: 8px;
+        }
       </style>
       <div class="card-config">
-        <div class="entities">
-          ${labels.map((label, index) => `
+        
+        <div class="section">
+          <div class="section-title">Required Entities</div>
+          ${labels.slice(0, 3).map((label, index) => `
             <div class="entity">
               <label>
                 ${label}
-                ${index < 3 ? '<span class="required">*</span>' : ''}
+                <span class="required">*</span>
               </label>
               <select data-index="${index}">
                 <option value="">Select entity...</option>
@@ -452,17 +559,108 @@ class LitterRobot4Editor extends HTMLElement {
             </div>
           `).join('')}
         </div>
+
+        <div class="section">
+          <div class="section-title">Optional Entities</div>
+          <div class="entity">
+            <label>${labels[3]}</label>
+            <select data-index="3">
+              <option value="">Select entity...</option>
+              ${sensorEntities.map(entityId => `
+                <option value="${entityId}" ${entities[3] === entityId ? 'selected' : ''}>
+                  ${this.hass.states[entityId].attributes.friendly_name || entityId}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Pet Weight Entities</div>
+          <div id="pet-weights">
+            ${petWeightEntities.map((entityId, index) => `
+              <div class="pet-weight-item">
+                <select data-pet-index="${index}">
+                  <option value="">Select pet weight entity...</option>
+                  ${sensorEntities.map(sensorId => `
+                    <option value="${sensorId}" ${entityId === sensorId ? 'selected' : ''}>
+                      ${this.hass.states[sensorId].attributes.friendly_name || sensorId}
+                    </option>
+                  `).join('')}
+                </select>
+                <button class="remove-btn" data-remove-pet="${index}">Remove</button>
+              </div>
+            `).join('')}
+          </div>
+          <button class="add-btn" id="add-pet-weight">Add Pet Weight Entity</button>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Settings</div>
+          
+          <div class="entity">
+            <label>Language</label>
+            <select id="language-select">
+              <option value="en" ${language === 'en' ? 'selected' : ''}>English</option>
+              <option value="es" ${language === 'es' ? 'selected' : ''}>Spanish</option>
+              <option value="nl" ${language === 'nl' ? 'selected' : ''}>Dutch</option>
+              <option value="fr" ${language === 'fr' ? 'selected' : ''}>French</option>
+            </select>
+          </div>
+
+          <div class="checkbox-container">
+            <input type="checkbox" id="use-metric" ${useMetric ? 'checked' : ''}>
+            <label for="use-metric">Use metric units (kg instead of lbs)</label>
+          </div>
+        </div>
+
       </div>
     `;
 
     // Add event listeners after the HTML is set
-    this.querySelectorAll('select').forEach(select => {
+    this.querySelectorAll('select[data-index]').forEach(select => {
       select.addEventListener('change', (event) => {
         const index = parseInt(event.target.getAttribute('data-index'));
         const value = event.target.value;
         this._valueChanged(index, value);
       });
     });
+
+    this.querySelectorAll('select[data-pet-index]').forEach(select => {
+      select.addEventListener('change', (event) => {
+        const index = parseInt(event.target.getAttribute('data-pet-index'));
+        const value = event.target.value;
+        this._petWeightChanged(index, value);
+      });
+    });
+
+    this.querySelectorAll('button[data-remove-pet]').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const index = parseInt(event.target.getAttribute('data-remove-pet'));
+        this._removePetWeight(index);
+      });
+    });
+
+    const addButton = this.querySelector('#add-pet-weight');
+    if (addButton) {
+      addButton.addEventListener('click', () => {
+        this._addPetWeight();
+      });
+    }
+
+    const languageSelect = this.querySelector('#language-select');
+    if (languageSelect) {
+      languageSelect.addEventListener('change', (event) => {
+        this._languageChanged(event.target.value);
+      });
+    }
+
+    const metricCheckbox = this.querySelector('#use-metric');
+    if (metricCheckbox) {
+      metricCheckbox.addEventListener('change', (event) => {
+        this._metricChanged(event.target.checked);
+      });
+    }
   }
 }
 
@@ -488,4 +686,4 @@ try {
   console.debug("All custom elements defined successfully");
 } catch (error) {
   console.error("Error defining custom elements:", error);
-} 
+}
