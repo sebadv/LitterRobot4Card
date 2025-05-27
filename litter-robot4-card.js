@@ -448,6 +448,9 @@ class LitterRobot4Editor extends HTMLElement {
       use_metric: false
     };
     this._hass = {};
+    
+    // Create shadow DOM for proper encapsulation
+    this.attachShadow({ mode: 'open' });
   }
 
   setConfig(config) {
@@ -472,7 +475,7 @@ class LitterRobot4Editor extends HTMLElement {
 
   _render() {
     if (!this._hass || !this._hass.states || !this._config) {
-      this.innerHTML = '<div style="padding: 16px;">Loading editor...</div>';
+      this.shadowRoot.innerHTML = '<div style="padding: 16px;">Loading editor...</div>';
       return;
     }
 
@@ -487,13 +490,76 @@ class LitterRobot4Editor extends HTMLElement {
     try {
       const entities = Object.keys(this._hass.states).sort();
       
-      this.innerHTML = `
-        <div style="padding: 16px; font-family: var(--paper-font-body1_-_font-family);">
-          <h3>Litter-Robot 4 Card Configuration</h3>
+      this.shadowRoot.innerHTML = `
+        <style>
+          :host {
+            display: block;
+            padding: 16px;
+            font-family: var(--paper-font-body1_-_font-family);
+          }
           
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Status Code Entity (Required)</label>
-            <select id="entity0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          .config-section {
+            margin-bottom: 24px;
+          }
+          
+          .config-section h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--primary-text-color);
+          }
+          
+          .config-row {
+            margin-bottom: 16px;
+          }
+          
+          .config-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: var(--primary-text-color);
+          }
+          
+          .config-label.required::after {
+            content: " *";
+            color: var(--error-color, red);
+          }
+          
+          select, input[type="checkbox"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--divider-color, #ccc);
+            border-radius: 4px;
+            background: var(--card-background-color, white);
+            color: var(--primary-text-color, black);
+            font-size: 14px;
+            font-family: inherit;
+          }
+          
+          input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+          }
+          
+          select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color, #03a9f4);
+            box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2);
+          }
+          
+          .checkbox-row {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+          }
+        </style>
+
+        <div class="config-section">
+          <h3>Required Entities</h3>
+          
+          <div class="config-row">
+            <label class="config-label required">Status Code Entity</label>
+            <select id="entity0">
               <option value="">Select entity...</option>
               ${entities.map(entityId => {
                 const entity = this._hass.states[entityId];
@@ -504,9 +570,9 @@ class LitterRobot4Editor extends HTMLElement {
             </select>
           </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Litter Level Entity (Required)</label>
-            <select id="entity1" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          <div class="config-row">
+            <label class="config-label required">Litter Level Entity</label>
+            <select id="entity1">
               <option value="">Select entity...</option>
               ${entities.map(entityId => {
                 const entity = this._hass.states[entityId];
@@ -517,9 +583,9 @@ class LitterRobot4Editor extends HTMLElement {
             </select>
           </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Waste Drawer Entity (Required)</label>
-            <select id="entity2" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          <div class="config-row">
+            <label class="config-label required">Waste Drawer Entity</label>
+            <select id="entity2">
               <option value="">Select entity...</option>
               ${entities.map(entityId => {
                 const entity = this._hass.states[entityId];
@@ -530,9 +596,9 @@ class LitterRobot4Editor extends HTMLElement {
             </select>
           </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Litter Hopper Entity (Optional)</label>
-            <select id="entity3" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          <div class="config-row">
+            <label class="config-label">Litter Hopper Entity (Optional)</label>
+            <select id="entity3">
               <option value="">Select entity...</option>
               ${entities.map(entityId => {
                 const entity = this._hass.states[entityId];
@@ -542,10 +608,14 @@ class LitterRobot4Editor extends HTMLElement {
               }).join('')}
             </select>
           </div>
+        </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Language</label>
-            <select id="language" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <div class="config-section">
+          <h3>Settings</h3>
+          
+          <div class="config-row">
+            <label class="config-label">Language</label>
+            <select id="language">
               <option value="en" ${this._config.language === 'en' ? 'selected' : ''}>English</option>
               <option value="es" ${this._config.language === 'es' ? 'selected' : ''}>Español</option>
               <option value="nl" ${this._config.language === 'nl' ? 'selected' : ''}>Nederlands</option>
@@ -553,26 +623,91 @@ class LitterRobot4Editor extends HTMLElement {
             </select>
           </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display: flex; align-items: center; font-weight: 500;">
-              <input type="checkbox" id="useMetric" ${this._config.use_metric ? 'checked' : ''} style="margin-right: 8px;">
+          <div class="config-row">
+            <label class="checkbox-row">
+              <input type="checkbox" id="useMetric" ${this._config.use_metric ? 'checked' : ''}>
               Use Metric Units (kg)
             </label>
           </div>
         </div>
       `;
 
-      // Add event listeners
-      this.querySelector('#entity0')?.addEventListener('change', (e) => this._updateConfig('entities.0', e.target.value));
-      this.querySelector('#entity1')?.addEventListener('change', (e) => this._updateConfig('entities.1', e.target.value));
-      this.querySelector('#entity2')?.addEventListener('change', (e) => this._updateConfig('entities.2', e.target.value));
-      this.querySelector('#entity3')?.addEventListener('change', (e) => this._updateConfig('entities.3', e.target.value));
-      this.querySelector('#language')?.addEventListener('change', (e) => this._updateConfig('language', e.target.value));
-      this.querySelector('#useMetric')?.addEventListener('change', (e) => this._updateConfig('use_metric', e.target.checked));
+      // Add event listeners with proper event handling
+      this._addEventListeners();
 
     } catch (error) {
       console.error('Error rendering editor:', error);
-      this.innerHTML = `<div style="padding: 16px; color: red;">Error rendering editor: ${error.message}</div>`;
+      this.shadowRoot.innerHTML = `<div style="padding: 16px; color: red;">Error rendering editor: ${error.message}</div>`;
+    }
+  }
+
+  _addEventListeners() {
+    // Add event listeners with proper event propagation handling
+    const selects = this.shadowRoot.querySelectorAll('select');
+    const inputs = this.shadowRoot.querySelectorAll('input');
+    
+    selects.forEach(select => {
+      // Prevent event propagation on all mouse and focus events
+      select.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      });
+      
+      select.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      });
+      
+      select.addEventListener('focus', (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      });
+      
+      select.addEventListener('blur', (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      });
+      
+      // Handle value changes
+      select.addEventListener('change', (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        this._handleSelectChange(e);
+      });
+    });
+    
+    inputs.forEach(input => {
+      input.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      });
+      
+      input.addEventListener('change', (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        this._handleInputChange(e);
+      });
+    });
+  }
+
+  _handleSelectChange(event) {
+    const id = event.target.id;
+    const value = event.target.value;
+    
+    if (id.startsWith('entity')) {
+      const index = parseInt(id.replace('entity', ''));
+      this._updateConfig('entities.' + index, value);
+    } else if (id === 'language') {
+      this._updateConfig('language', value);
+    }
+  }
+
+  _handleInputChange(event) {
+    const id = event.target.id;
+    const value = event.target.checked;
+    
+    if (id === 'useMetric') {
+      this._updateConfig('use_metric', value);
     }
   }
 
