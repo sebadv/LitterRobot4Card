@@ -476,19 +476,31 @@ class LitterRobot4Editor extends HTMLElement {
     // Get the composed path to check if event originated from our editor
     const path = ev.composedPath();
     
+    // Define elements that should be allowed to function normally
+    const allowedTags = ['SELECT', 'OPTION', 'INPUT', 'LABEL', 'MDC-MENU', 'MDC-LIST', 'HA-TEXTFIELD', 'HA-ENTITY-PICKER'];
+    
+    // Check if the event target is an allowed interactive element
+    const isAllowedElement = path.some(el => {
+      return el && el.tagName && allowedTags.includes(el.tagName);
+    });
+    
     // Check if the event path includes our editor element
-    if (path.some(el => {
+    const insideEditor = path.some(el => {
       return el && el.tagName === 'LITTER-ROBOT4-EDITOR' || 
              (el && el.shadowRoot && el.shadowRoot.contains && el.shadowRoot.contains(ev.target));
-    })) {
-      // Event originated from inside our editor - stop it from reaching HA's handlers
+    });
+    
+    // Only intercept events that are:
+    // 1. Inside our editor
+    // 2. NOT targeting allowed interactive elements
+    // 3. Are click events that could trigger dialog close
+    if (insideEditor && !isAllowedElement && (ev.type === 'click' || ev.type === 'mousedown')) {
+      // Event originated from inside our editor but not from an interactive element
+      // Stop it from reaching HA's dialog handlers
       ev.stopPropagation();
       ev.stopImmediatePropagation();
       
-      // For certain events, also prevent default behavior
-      if (ev.type === 'mousedown' || ev.type === 'mouseup') {
-        ev.preventDefault();
-      }
+      console.debug('Intercepted non-interactive click to prevent dialog close');
     }
   }
 
@@ -716,7 +728,7 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _addEventListeners() {
-    // With global event interception, we only need to handle change events locally
+    // With improved global event interception, we only need to handle change events locally
     const selects = this.shadowRoot.querySelectorAll('select');
     const inputs = this.shadowRoot.querySelectorAll('input');
     
@@ -737,21 +749,6 @@ class LitterRobot4Editor extends HTMLElement {
     // Detect if we're in a modal and add appropriate class
     if (this.closest('ha-dialog') || this.closest('[role="dialog"]') || this.closest('.mdc-dialog')) {
       this.classList.add('in-modal');
-    }
-  }
-
-  _stopAllEvents(e) {
-    // This method is now primarily used by the global interceptor
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    
-    // For focusout events, also prevent default to maintain focus
-    if (e.type === 'focusout') {
-      const relatedTarget = e.relatedTarget;
-      // Only allow focusout if moving to another interactive element in our editor
-      if (!relatedTarget || !this.shadowRoot.contains(relatedTarget)) {
-        e.preventDefault();
-      }
     }
   }
 
