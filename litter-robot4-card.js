@@ -8,14 +8,16 @@ import { LitElement, html, css } from 'lit';
 console.debug("Registering Litter-Robot 4 Card...");
 console.info("%c LITTER-ROBOT-4-CARD %c Loaded ", "color: white; background: #4caf50; font-weight: 700;", "color: #4caf50; background: white; font-weight: 700;");
 
+// Register with Home Assistant's custom cards registry
 try {
   console.debug("Adding to custom cards list...");
   window.customCards = window.customCards || [];
   window.customCards.push({
     type: "litter-robot4-card", 
     name: "Litter-Robot 4 Card", 
-    description: "A custom card to show Litter-Robot 4 status", 
-    preview: true
+    description: "A custom card to show Litter-Robot 4 status with litter level, waste drawer, and optional hopper support", 
+    preview: true,
+    documentationURL: "https://github.com/sebadv/LitterRobot4Card"
   });
   console.debug("Added to custom cards list successfully");
 } catch (error) {
@@ -64,7 +66,7 @@ class LitterRobot4Card extends LitElement {
     if (this._loadedLanguages.has(language)) return;
     
     try {
-      const response = await fetch(`/local/litter-robot4-card/translations/${language}.json`);
+      const response = await fetch(`/local/community/LitterRobot4Card/translations/${language}.json`);
       if (response.ok) {
         this._translations[language] = await response.json();
         this._loadedLanguages.add(language);
@@ -361,9 +363,24 @@ class LitterRobot4Editor extends LitElement {
 
 try {
   console.debug("Defining custom elements...");
-  customElements.define("litter-robot4-card", LitterRobot4Card);
-  customElements.define("litter-robot4-editor", LitterRobot4Editor);
-  console.debug("Custom elements defined successfully");
+  
+  // Define the main card element
+  if (!customElements.get("litter-robot4-card")) {
+    customElements.define("litter-robot4-card", LitterRobot4Card);
+    console.debug("litter-robot4-card element defined successfully");
+  } else {
+    console.debug("litter-robot4-card element already defined");
+  }
+  
+  // Define the editor element
+  if (!customElements.get("litter-robot4-editor")) {
+    customElements.define("litter-robot4-editor", LitterRobot4Editor);
+    console.debug("litter-robot4-editor element defined successfully");
+  } else {
+    console.debug("litter-robot4-editor element already defined");
+  }
+  
+  console.debug("All custom elements defined successfully");
 } catch (error) {
   console.error("Error defining custom elements:", error);
 } 
