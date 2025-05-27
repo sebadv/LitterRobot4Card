@@ -1,9 +1,8 @@
 /**
  * @license
- * Copyright 2019 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
+ * Litter-Robot 4 Card for Home Assistant
+ * Compatible with Home Assistant's frontend without external dependencies
  */
-import { LitElement, html, css } from 'lit';
 
 console.debug("Registering Litter-Robot 4 Card...");
 console.info("%c LITTER-ROBOT-4-CARD %c Loaded ", "color: white; background: #4caf50; font-weight: 700;", "color: #4caf50; background: white; font-weight: 700;");
@@ -24,9 +23,16 @@ try {
   console.error("Error adding to custom cards list:", error);
 }
 
-class LitterRobot4Card extends LitElement {
+class LitterRobot4Card extends HTMLElement {
+  constructor() {
+    super();
+    this._config = {};
+    this._hass = {};
+    this._translations = {};
+    this._loadedLanguages = new Set();
+  }
+
   static async getConfigElement() {
-    await customElements.whenDefined("litter-robot4-editor");
     return document.createElement("litter-robot4-editor");
   }
 
@@ -34,18 +40,13 @@ class LitterRobot4Card extends LitElement {
     return {type: "custom:litter-robot4-card", entities: ["", "", "", ""], pet_weight_entities: [], language: "en"};
   }
 
-  static get properties() {
-    return {
-      hass: {type: Object}, 
-      _config: {type: Object},
-      _translations: {type: Object}
-    };
+  set hass(hass) {
+    this._hass = hass;
+    this._updateContent();
   }
 
-  constructor() {
-    super();
-    this._translations = {};
-    this._loadedLanguages = new Set();
+  get hass() {
+    return this._hass;
   }
 
   async setConfig(config) {
@@ -60,6 +61,7 @@ class LitterRobot4Card extends LitElement {
     
     // Load translations for the configured language
     await this._loadTranslations(this._config.language);
+    this._updateContent();
   }
 
   async _loadTranslations(language) {
@@ -155,7 +157,7 @@ class LitterRobot4Card extends LitElement {
   }
 
   _getHopperIcon(entityId) {
-    const state = this.hass.states[entityId]?.state;
+    const state = this._hass.states[entityId]?.state;
     switch (state) {
       case 'enabled':
         return 'green';
@@ -173,15 +175,15 @@ class LitterRobot4Card extends LitElement {
   }
 
   _getHopperState(entityId) {
-    const state = this.hass.states[entityId]?.state;
+    const state = this._hass.states[entityId]?.state;
     return this._(`hopper.${state}`) || state;
   }
 
-  render() {
-    if (!this.hass || !this._config) return html``;
+  _updateContent() {
+    if (!this._hass || !this._config) return;
 
-    const [statusEntity, litterEntity, wasteEntity, hopperEntity] = (this._config.entities || []).map(entityId => entityId ? this.hass.states[entityId] : undefined);
-    const petWeightEntities = (this._config.pet_weight_entities || []).map(entityId => entityId ? this.hass.states[entityId] : undefined).filter(entity => entity !== undefined);
+    const [statusEntity, litterEntity, wasteEntity, hopperEntity] = (this._config.entities || []).map(entityId => entityId ? this._hass.states[entityId] : undefined);
+    const petWeightEntities = (this._config.pet_weight_entities || []).map(entityId => entityId ? this._hass.states[entityId] : undefined).filter(entity => entity !== undefined);
 
     const litterLevel = Number(litterEntity?.state);
     const wasteLevel = Number(wasteEntity?.state);
@@ -192,117 +194,123 @@ class LitterRobot4Card extends LitElement {
     const statusText = this.getReadableStatus(statusEntity?.state || "");
     const statusColor = this.getStatusColor(statusEntity?.state || "");
 
-    return html`
+    this.innerHTML = `
       <ha-card>
+        <style>
+          ha-card {
+            padding: 16px;
+            background: var(--card-background-color, white);
+            color: var(--primary-text-color, black);
+            border-radius: 12px;
+            font-family: 'Segoe UI', sans-serif;
+          }
+
+          .title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+          }
+
+          .status {
+            display: flex;
+            align-items: center;
+            margin: 4px 0 12px 0;
+          }
+
+          .status-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+          }
+
+          .item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+          }
+
+          .icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+          }
+
+          .pet-weights {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
+          }
+
+          .green { background-color: #4caf50; }
+          .yellow { background-color: #ffc107; }
+          .red { background-color: #f44336; }
+          .blue { background-color: #00b0ff; }
+          .orange { background-color: #ff9800; }
+          .gray { background-color: #9e9e9e; }
+
+          .label { font-size: 0.95rem; }
+
+          .clickable {
+            cursor: pointer;
+          }
+        </style>
+        
         <div class="title">${this._("common.title")}</div>
 
-        <div class="status clickable" @click=${() => this._showMoreInfo(statusEntity?.entity_id || "")}>
+        <div class="status clickable" onclick="this.getRootNode().host._showMoreInfo('${statusEntity?.entity_id || ""}')">
           <div class="status-icon ${statusColor}"></div>
           <div class="label">${statusText}</div>
         </div>
 
-        <div class="item clickable" @click=${() => this._showMoreInfo(litterEntity?.entity_id || "")}>
+        <div class="item clickable" onclick="this.getRootNode().host._showMoreInfo('${litterEntity?.entity_id || ""}')">
           <div class="icon ${litterColor}"></div>
           <div class="label">${this._("common.litter")}: ${litterDisplay}</div>
         </div>
 
-        <div class="item clickable" @click=${() => this._showMoreInfo(wasteEntity?.entity_id || "")}>
+        <div class="item clickable" onclick="this.getRootNode().host._showMoreInfo('${wasteEntity?.entity_id || ""}')">
           <div class="icon ${wasteColor}"></div>
           <div class="label">${this._("common.waste")}: ${wasteDisplay} ${this._("common.full")}</div>
         </div>
 
-        ${hopperEntity ? html`
-          <div class="item clickable" @click=${() => this._showMoreInfo(hopperEntity.entity_id)}>
+        ${hopperEntity ? `
+          <div class="item clickable" onclick="this.getRootNode().host._showMoreInfo('${hopperEntity.entity_id}')">
             <div class="icon ${this._getHopperIcon(hopperEntity.entity_id)}"></div>
             <div class="label">${this._("common.hopper")}: ${this._getHopperState(hopperEntity.entity_id)}</div>
           </div>
         ` : ""}
 
-        ${petWeightEntities.length > 0 ? html`
+        ${petWeightEntities.length > 0 ? `
           <div class="pet-weights">
-            ${petWeightEntities.map(entity => html`
-              <div class="item clickable" @click=${() => this._showMoreInfo(entity.entity_id || "")}>
+            ${petWeightEntities.map(entity => `
+              <div class="item clickable" onclick="this.getRootNode().host._showMoreInfo('${entity.entity_id || ""}')">
                 <div class="icon blue"></div>
                 <div class="label">${entity.attributes?.friendly_name || this._("common.pet_weight")}: ${this.convertWeight(entity.state || "")}</div>
               </div>
-            `)}
+            `).join('')}
           </div>
         ` : ""}
       </ha-card>
     `;
   }
-
-  static get styles() {
-    return css`
-      ha-card {
-        padding: 16px;
-        background: var(--card-background-color, white);
-        color: var(--primary-text-color, white);
-        border-radius: 12px;
-        font-family: 'Segoe UI', sans-serif;
-      }
-
-      .title {
-        font-size: 1.4rem;
-        font-weight: bold;
-        margin-bottom: 12px;
-      }
-
-      .status {
-        display: flex;
-        align-items: center;
-        margin: 4px 0 12px 0;
-      }
-
-      .status-icon {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        margin-right: 8px;
-      }
-
-      .item {
-        display: flex;
-        align-items: center;
-        margin: 6px 0;
-      }
-
-      .icon {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        margin-right: 8px;
-      }
-
-      .pet-weights {
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
-      }
-
-      .green { background-color: #4caf50; }
-      .yellow { background-color: #ffc107; }
-      .red { background-color: #f44336; }
-      .blue { background-color: #00b0ff; }
-      .orange { background-color: #ff9800; }
-      .gray { background-color: #9e9e9e; }
-
-      .label { font-size: 0.95rem; }
-
-      .clickable {
-        cursor: pointer;
-      }
-    `;
-  }
 }
 
-class LitterRobot4Editor extends LitElement {
-  static get properties() {
-    return { hass: { type: Object }, config: { type: Object } };
+class LitterRobot4Editor extends HTMLElement {
+  constructor() {
+    super();
+    this.config = {};
+    this.hass = {};
   }
 
   setConfig(config) {
     this.config = config;
+    this._updateEditor();
+  }
+
+  set hass(hass) {
+    this.hass = hass;
+    this._updateEditor();
   }
 
   _valueChanged(ev, index) {
@@ -310,9 +318,10 @@ class LitterRobot4Editor extends LitElement {
     const target = ev.target;
     const configValue = target.value;
     
-    if (this.config.entities) {
-      this.config.entities[index] = configValue;
+    if (!this.config.entities) {
+      this.config.entities = [];
     }
+    this.config.entities[index] = configValue;
     
     const event = new CustomEvent("config-changed", {
       detail: { config: this.config },
@@ -322,41 +331,55 @@ class LitterRobot4Editor extends LitElement {
     this.dispatchEvent(event);
   }
 
-  render() {
+  _updateEditor() {
     if (!this.hass || !this.config) {
-      return html``;
+      return;
     }
 
     const entities = this.config.entities || [];
+    const labels = ["Status Code Entity", "Litter Level Entity", "Waste Drawer Entity", "Litter Hopper Entity (optional)"];
 
-    return html`
+    this.innerHTML = `
+      <style>
+        .card-config {
+          padding: 16px;
+        }
+        .entity {
+          margin-bottom: 12px;
+        }
+        .entity label {
+          display: block;
+          margin-bottom: 4px;
+          font-weight: 500;
+        }
+        .entity select {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid var(--divider-color, #ccc);
+          border-radius: 4px;
+          background: var(--card-background-color, white);
+          color: var(--primary-text-color, black);
+        }
+      </style>
       <div class="card-config">
         <div class="entities">
-          ${["Status Code Entity", "Litter Level Entity", "Waste Drawer Entity", "Litter Hopper Entity (optional)"].map((label, index) => html`
+          ${labels.map((label, index) => `
             <div class="entity">
-              <ha-entity-picker
-                .hass=${this.hass}
-                .label=${label}
-                .value=${entities[index] || ""}
-                .includeDomains=${["sensor"]}
-                .required=${index < 3}
-                @value-changed=${(ev) => this._valueChanged(ev, index)}
-              ></ha-entity-picker>
+              <label>${label}</label>
+              <select onchange="this.getRootNode().host._valueChanged(event, ${index})">
+                <option value="">Select entity...</option>
+                ${Object.keys(this.hass.states || {})
+                  .filter(entityId => entityId.startsWith('sensor.'))
+                  .map(entityId => `
+                    <option value="${entityId}" ${entities[index] === entityId ? 'selected' : ''}>
+                      ${this.hass.states[entityId].attributes.friendly_name || entityId}
+                    </option>
+                  `).join('')}
+              </select>
             </div>
-          `)}
+          `).join('')}
         </div>
       </div>
-    `;
-  }
-
-  static get styles() {
-    return css`
-      .card-config {
-        padding: 16px;
-      }
-      .entity {
-        margin-bottom: 12px;
-      }
     `;
   }
 }
