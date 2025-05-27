@@ -7,21 +7,47 @@
 console.debug("Registering Litter-Robot 4 Card...");
 console.info("%c LITTER-ROBOT-4-CARD %c Loaded ", "color: white; background: #4caf50; font-weight: 700;", "color: #4caf50; background: white; font-weight: 700;");
 
-// Register with Home Assistant's custom cards registry
-try {
-  console.debug("Adding to custom cards list...");
-  window.customCards = window.customCards || [];
-  window.customCards.push({
-    type: "litter-robot4-card", 
-    name: "Litter-Robot 4 Card", 
-    description: "A custom card to show Litter-Robot 4 status with litter level, waste drawer, and optional hopper support", 
-    preview: true,
-    documentationURL: "https://github.com/sebadv/LitterRobot4Card"
+// Wait for Home Assistant to be ready
+const waitForHass = () => {
+  return new Promise((resolve) => {
+    if (window.customCards) {
+      resolve();
+    } else {
+      const checkInterval = setInterval(() => {
+        if (window.customCards) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+    }
   });
-  console.debug("Added to custom cards list successfully");
-} catch (error) {
-  console.error("Error adding to custom cards list:", error);
-}
+};
+
+// Register with Home Assistant's custom cards registry
+const registerCard = async () => {
+  try {
+    await waitForHass();
+    console.debug("Adding to custom cards list...");
+    window.customCards = window.customCards || [];
+    
+    // Check if already registered to avoid duplicates
+    const existingCard = window.customCards.find(card => card.type === "litter-robot4-card");
+    if (!existingCard) {
+      window.customCards.push({
+        type: "litter-robot4-card", 
+        name: "Litter-Robot 4 Card", 
+        description: "A custom card to show Litter-Robot 4 status with litter level, waste drawer, and optional hopper support", 
+        preview: true,
+        documentationURL: "https://github.com/sebadv/LitterRobot4Card"
+      });
+      console.debug("Added to custom cards list successfully");
+    } else {
+      console.debug("Card already registered in custom cards list");
+    }
+  } catch (error) {
+    console.error("Error adding to custom cards list:", error);
+  }
+};
 
 class LitterRobot4Card extends HTMLElement {
   constructor() {
@@ -30,15 +56,129 @@ class LitterRobot4Card extends HTMLElement {
     this._hass = {};
     this._translations = {};
     this._loadedLanguages = new Set();
+    
+    // Embedded translations as fallback
+    this._embeddedTranslations = {
+      en: {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Litter",
+          waste: "Waste",
+          full: "Full",
+          pet_weight: "Pet Weight",
+          hopper: "Litter Hopper"
+        },
+        status: {
+          br: "Bonnet Removed", ccc: "Clean Cycle Complete", ccp: "Clean Cycle In Progress",
+          cd: "Clean Cycle Done", csf: "Cat Sensor Fault", csi: "Cat Sensor Interrupted",
+          cst: "Cat Sensor Timing", df1: "Drawer Full (1)", df2: "Drawer Full (2)",
+          dfs: "Drawer Full Sensor", dhf: "Drawer Hall Sensor Fault", dpf: "Drawer Position Fault",
+          ec: "Error Condition", hpf: "Hall Position Fault", off: "Power Off", offline: "Offline",
+          otf: "Over Torque Fault", p: "Paused", pd: "Pad Detect", pwrd: "Power Drained",
+          pwru: "Power Up", rdy: "Ready", scf: "Sensor Contact Fault", sdf: "Sensor Drawer Fault",
+          spf: "Sensor Position Fault"
+        },
+        hopper: {
+          enabled: "Enabled", disabled: "Disabled", empty: "Empty",
+          motor_fault_short: "Motor Fault (Short)", motor_ot_amps: "Motor Overcurrent",
+          motor_disconnected: "Motor Disconnected"
+        }
+      },
+      es: {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Arena",
+          waste: "Desechos",
+          full: "Lleno",
+          pet_weight: "Peso de Mascota",
+          hopper: "Tolva de Arena"
+        },
+        status: {
+          br: "Capó Removido", ccc: "Ciclo de Limpieza Completo", ccp: "Ciclo de Limpieza en Progreso",
+          cd: "Ciclo de Limpieza Terminado", csf: "Falla del Sensor de Gato", csi: "Sensor de Gato Interrumpido",
+          cst: "Tiempo del Sensor de Gato", df1: "Cajón Lleno (1)", df2: "Cajón Lleno (2)",
+          dfs: "Sensor de Cajón Lleno", dhf: "Falla del Sensor Hall del Cajón", dpf: "Falla de Posición del Cajón",
+          ec: "Condición de Error", hpf: "Falla de Posición Hall", off: "Apagado", offline: "Desconectado",
+          otf: "Falla de Sobretorque", p: "Pausado", pd: "Detección de Almohadilla", pwrd: "Energía Agotada",
+          pwru: "Encendido", rdy: "Listo", scf: "Falla de Contacto del Sensor", sdf: "Falla del Sensor del Cajón",
+          spf: "Falla de Posición del Sensor"
+        },
+        hopper: {
+          enabled: "Habilitado", disabled: "Deshabilitado", empty: "Vacío",
+          motor_fault_short: "Falla del Motor (Corto)", motor_ot_amps: "Motor Sobrecorriente",
+          motor_disconnected: "Motor Desconectado"
+        }
+      },
+      nl: {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Kattenbakvulling",
+          waste: "Afval",
+          full: "Vol",
+          pet_weight: "Huisdiergewicht",
+          hopper: "Vulling Hopper"
+        },
+        status: {
+          br: "Kap Verwijderd", ccc: "Reinigingscyclus Voltooid", ccp: "Reinigingscyclus Bezig",
+          cd: "Reinigingscyclus Klaar", csf: "Kattensensor Fout", csi: "Kattensensor Onderbroken",
+          cst: "Kattensensor Timing", df1: "Lade Vol (1)", df2: "Lade Vol (2)",
+          dfs: "Lade Vol Sensor", dhf: "Lade Hall Sensor Fout", dpf: "Lade Positie Fout",
+          ec: "Foutconditie", hpf: "Hall Positie Fout", off: "Uit", offline: "Offline",
+          otf: "Overkoppel Fout", p: "Gepauzeerd", pd: "Pad Detectie", pwrd: "Stroom Leeg",
+          pwru: "Opstarten", rdy: "Klaar", scf: "Sensor Contact Fout", sdf: "Sensor Lade Fout",
+          spf: "Sensor Positie Fout"
+        },
+        hopper: {
+          enabled: "Ingeschakeld", disabled: "Uitgeschakeld", empty: "Leeg",
+          motor_fault_short: "Motor Fout (Kort)", motor_ot_amps: "Motor Overstroom",
+          motor_disconnected: "Motor Losgekoppeld"
+        }
+      },
+      fr: {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Litière",
+          waste: "Déchets",
+          full: "Plein",
+          pet_weight: "Poids de l'Animal",
+          hopper: "Trémie à Litière"
+        },
+        status: {
+          br: "Capot Retiré", ccc: "Cycle de Nettoyage Terminé", ccp: "Cycle de Nettoyage en Cours",
+          cd: "Cycle de Nettoyage Fini", csf: "Défaut Capteur Chat", csi: "Capteur Chat Interrompu",
+          cst: "Timing Capteur Chat", df1: "Tiroir Plein (1)", df2: "Tiroir Plein (2)",
+          dfs: "Capteur Tiroir Plein", dhf: "Défaut Capteur Hall Tiroir", dpf: "Défaut Position Tiroir",
+          ec: "Condition d'Erreur", hpf: "Défaut Position Hall", off: "Éteint", offline: "Hors Ligne",
+          otf: "Défaut Surtorque", p: "En Pause", pd: "Détection Coussin", pwrd: "Énergie Épuisée",
+          pwru: "Mise sous Tension", rdy: "Prêt", scf: "Défaut Contact Capteur", sdf: "Défaut Capteur Tiroir",
+          spf: "Défaut Position Capteur"
+        },
+        hopper: {
+          enabled: "Activé", disabled: "Désactivé", empty: "Vide",
+          motor_fault_short: "Défaut Moteur (Court)", motor_ot_amps: "Moteur Surintensité",
+          motor_disconnected: "Moteur Déconnecté"
+        }
+      }
+    };
   }
 
   static async getConfigElement() {
-    // Ensure the editor element is defined
-    if (!customElements.get("litter-robot4-editor")) {
-      // Wait a bit for the element to be defined
+    // Ensure the editor element is defined with better error handling
+    const maxAttempts = 50;
+    let attempts = 0;
+    
+    while (attempts < maxAttempts) {
+      if (customElements.get("litter-robot4-editor")) {
+        console.debug("Editor element found, returning it");
+        return document.createElement("litter-robot4-editor");
+      }
+      
+      attempts++;
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    return document.createElement("litter-robot4-editor");
+    
+    console.error("Editor element not found after maximum attempts");
+    throw new Error("Editor element not available");
   }
 
   static getStubConfig() {
@@ -77,46 +217,53 @@ class LitterRobot4Card extends HTMLElement {
   async _loadTranslations(language) {
     if (this._loadedLanguages.has(language)) return;
     
-    try {
-      const response = await fetch(`/local/community/LitterRobot4Card/translations/${language}.json`);
-      if (response.ok) {
-        this._translations[language] = await response.json();
-        this._loadedLanguages.add(language);
-        console.debug(`Loaded translations for ${language}`);
-      } else {
-        console.warn(`Failed to load translations for ${language}, falling back to English`);
-        if (language !== 'en') {
-          await this._loadTranslations('en');
+    // First try to use embedded translations
+    if (this._embeddedTranslations[language]) {
+      this._translations[language] = this._embeddedTranslations[language];
+      this._loadedLanguages.add(language);
+      console.debug(`Using embedded translations for ${language}`);
+      return;
+    }
+    
+    // If no embedded translation, try to load from external files
+    const cacheBuster = Date.now();
+    
+    // Try multiple possible paths for translation files
+    const possiblePaths = [
+      `/local/community/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,
+      `/hacsfiles/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,
+      `/local/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,
+      `/local/litter-robot4-card/translations/${language}.json?v=${cacheBuster}`
+    ];
+    
+    let translationsLoaded = false;
+    
+    for (const path of possiblePaths) {
+      try {
+        console.debug(`Trying to load translations from: ${path}`);
+        const response = await fetch(path);
+        if (response.ok) {
+          this._translations[language] = await response.json();
+          this._loadedLanguages.add(language);
+          console.debug(`Successfully loaded translations for ${language} from ${path}`);
+          translationsLoaded = true;
+          break;
         }
+      } catch (error) {
+        console.debug(`Failed to load from ${path}:`, error);
+        continue;
       }
-    } catch (error) {
-      console.error(`Error loading translations for ${language}:`, error);
-      // Fallback to hardcoded English translations
-      this._translations[language] = {
-        common: {
-          title: "Litter-Robot 4",
-          litter: "Litter",
-          waste: "Waste",
-          full: "Full",
-          pet_weight: "Pet Weight",
-          hopper: "Litter Hopper"
-        },
-        status: {
-          br: "Bonnet Removed", ccc: "Clean Cycle Complete", ccp: "Clean Cycle In Progress",
-          cd: "Clean Cycle Done", csf: "Cat Sensor Fault", csi: "Cat Sensor Interrupted",
-          cst: "Cat Sensor Timing", df1: "Drawer Full (1)", df2: "Drawer Full (2)",
-          dfs: "Drawer Full Sensor", dhf: "Drawer Hall Sensor Fault", dpf: "Drawer Position Fault",
-          ec: "Error Condition", hpf: "Hall Position Fault", off: "Power Off", offline: "Offline",
-          otf: "Over Torque Fault", p: "Paused", pd: "Pad Detect", pwrd: "Power Drained",
-          pwru: "Power Up", rdy: "Ready", scf: "Sensor Contact Fault", sdf: "Sensor Drawer Fault",
-          spf: "Sensor Position Fault"
-        },
-        hopper: {
-          enabled: "Enabled", disabled: "Disabled", empty: "Empty",
-          motor_fault_short: "Motor Fault (Short)", motor_ot_amps: "Motor Overcurrent",
-          motor_disconnected: "Motor Disconnected"
-        }
-      };
+    }
+    
+    if (!translationsLoaded) {
+      console.warn(`Failed to load translations for ${language} from all paths, falling back to English`);
+      if (language !== 'en') {
+        await this._loadTranslations('en');
+        return;
+      }
+      
+      // Final fallback to hardcoded English if even embedded translations fail
+      this._translations[language] = this._embeddedTranslations['en'];
       this._loadedLanguages.add(language);
     }
   }
@@ -664,26 +811,53 @@ class LitterRobot4Editor extends HTMLElement {
   }
 }
 
-try {
-  console.debug("Defining custom elements...");
-  
-  // Define the main card element
-  if (!customElements.get("litter-robot4-card")) {
-    customElements.define("litter-robot4-card", LitterRobot4Card);
-    console.debug("litter-robot4-card element defined successfully");
-  } else {
-    console.debug("litter-robot4-card element already defined");
+// Improved custom element registration with better error handling
+const defineCustomElements = async () => {
+  try {
+    console.debug("Defining custom elements...");
+    
+    // Define the main card element
+    if (!customElements.get("litter-robot4-card")) {
+      customElements.define("litter-robot4-card", LitterRobot4Card);
+      console.debug("litter-robot4-card element defined successfully");
+    } else {
+      console.debug("litter-robot4-card element already defined");
+    }
+    
+    // Define the editor element
+    if (!customElements.get("litter-robot4-editor")) {
+      customElements.define("litter-robot4-editor", LitterRobot4Editor);
+      console.debug("litter-robot4-editor element defined successfully");
+    } else {
+      console.debug("litter-robot4-editor element already defined");
+    }
+    
+    console.debug("All custom elements defined successfully");
+    
+    // Register the card after elements are defined
+    await registerCard();
+    
+  } catch (error) {
+    console.error("Error defining custom elements:", error);
+    throw error;
   }
-  
-  // Define the editor element
-  if (!customElements.get("litter-robot4-editor")) {
-    customElements.define("litter-robot4-editor", LitterRobot4Editor);
-    console.debug("litter-robot4-editor element defined successfully");
-  } else {
-    console.debug("litter-robot4-editor element already defined");
+};
+
+// Initialize everything when the script loads
+(async () => {
+  try {
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      await new Promise(resolve => {
+        document.addEventListener('DOMContentLoaded', resolve);
+      });
+    }
+    
+    // Define custom elements and register card
+    await defineCustomElements();
+    
+    console.debug("Litter-Robot 4 Card initialization complete");
+  } catch (error) {
+    console.error("Failed to initialize Litter-Robot 4 Card:", error);
   }
-  
-  console.debug("All custom elements defined successfully");
-} catch (error) {
-  console.error("Error defining custom elements:", error);
-}
+})();
