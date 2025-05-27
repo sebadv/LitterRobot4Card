@@ -56,110 +56,6 @@ class LitterRobot4Card extends HTMLElement {
     this._hass = {};
     this._translations = {};
     this._loadedLanguages = new Set();
-    
-    // Embedded translations as fallback
-    this._embeddedTranslations = {
-      en: {
-        common: {
-          title: "Litter-Robot 4",
-          litter: "Litter",
-          waste: "Waste",
-          full: "Full",
-          pet_weight: "Pet Weight",
-          hopper: "Litter Hopper"
-        },
-        status: {
-          br: "Bonnet Removed", ccc: "Clean Cycle Complete", ccp: "Clean Cycle In Progress",
-          cd: "Clean Cycle Done", csf: "Cat Sensor Fault", csi: "Cat Sensor Interrupted",
-          cst: "Cat Sensor Timing", df1: "Drawer Full (1)", df2: "Drawer Full (2)",
-          dfs: "Drawer Full Sensor", dhf: "Drawer Hall Sensor Fault", dpf: "Drawer Position Fault",
-          ec: "Error Condition", hpf: "Hall Position Fault", off: "Power Off", offline: "Offline",
-          otf: "Over Torque Fault", p: "Paused", pd: "Pad Detect", pwrd: "Power Drained",
-          pwru: "Power Up", rdy: "Ready", scf: "Sensor Contact Fault", sdf: "Sensor Drawer Fault",
-          spf: "Sensor Position Fault"
-        },
-        hopper: {
-          enabled: "Enabled", disabled: "Disabled", empty: "Empty",
-          motor_fault_short: "Motor Fault (Short)", motor_ot_amps: "Motor Overcurrent",
-          motor_disconnected: "Motor Disconnected"
-        }
-      },
-      es: {
-        common: {
-          title: "Litter-Robot 4",
-          litter: "Arena",
-          waste: "Desechos",
-          full: "Lleno",
-          pet_weight: "Peso de Mascota",
-          hopper: "Tolva de Arena"
-        },
-        status: {
-          br: "Capó Removido", ccc: "Ciclo de Limpieza Completo", ccp: "Ciclo de Limpieza en Progreso",
-          cd: "Ciclo de Limpieza Terminado", csf: "Falla del Sensor de Gato", csi: "Sensor de Gato Interrumpido",
-          cst: "Tiempo del Sensor de Gato", df1: "Cajón Lleno (1)", df2: "Cajón Lleno (2)",
-          dfs: "Sensor de Cajón Lleno", dhf: "Falla del Sensor Hall del Cajón", dpf: "Falla de Posición del Cajón",
-          ec: "Condición de Error", hpf: "Falla de Posición Hall", off: "Apagado", offline: "Desconectado",
-          otf: "Falla de Sobretorque", p: "Pausado", pd: "Detección de Almohadilla", pwrd: "Energía Agotada",
-          pwru: "Encendido", rdy: "Listo", scf: "Falla de Contacto del Sensor", sdf: "Falla del Sensor del Cajón",
-          spf: "Falla de Posición del Sensor"
-        },
-        hopper: {
-          enabled: "Habilitado", disabled: "Deshabilitado", empty: "Vacío",
-          motor_fault_short: "Falla del Motor (Corto)", motor_ot_amps: "Motor Sobrecorriente",
-          motor_disconnected: "Motor Desconectado"
-        }
-      },
-      nl: {
-        common: {
-          title: "Litter-Robot 4",
-          litter: "Kattenbakvulling",
-          waste: "Afval",
-          full: "Vol",
-          pet_weight: "Huisdiergewicht",
-          hopper: "Vulling Hopper"
-        },
-        status: {
-          br: "Kap Verwijderd", ccc: "Reinigingscyclus Voltooid", ccp: "Reinigingscyclus Bezig",
-          cd: "Reinigingscyclus Klaar", csf: "Kattensensor Fout", csi: "Kattensensor Onderbroken",
-          cst: "Kattensensor Timing", df1: "Lade Vol (1)", df2: "Lade Vol (2)",
-          dfs: "Lade Vol Sensor", dhf: "Lade Hall Sensor Fout", dpf: "Lade Positie Fout",
-          ec: "Foutconditie", hpf: "Hall Positie Fout", off: "Uit", offline: "Offline",
-          otf: "Overkoppel Fout", p: "Gepauzeerd", pd: "Pad Detectie", pwrd: "Stroom Leeg",
-          pwru: "Opstarten", rdy: "Klaar", scf: "Sensor Contact Fout", sdf: "Sensor Lade Fout",
-          spf: "Sensor Positie Fout"
-        },
-        hopper: {
-          enabled: "Ingeschakeld", disabled: "Uitgeschakeld", empty: "Leeg",
-          motor_fault_short: "Motor Fout (Kort)", motor_ot_amps: "Motor Overstroom",
-          motor_disconnected: "Motor Losgekoppeld"
-        }
-      },
-      fr: {
-        common: {
-          title: "Litter-Robot 4",
-          litter: "Litière",
-          waste: "Déchets",
-          full: "Plein",
-          pet_weight: "Poids de l'Animal",
-          hopper: "Trémie à Litière"
-        },
-        status: {
-          br: "Capot Retiré", ccc: "Cycle de Nettoyage Terminé", ccp: "Cycle de Nettoyage en Cours",
-          cd: "Cycle de Nettoyage Fini", csf: "Défaut Capteur Chat", csi: "Capteur Chat Interrompu",
-          cst: "Timing Capteur Chat", df1: "Tiroir Plein (1)", df2: "Tiroir Plein (2)",
-          dfs: "Capteur Tiroir Plein", dhf: "Défaut Capteur Hall Tiroir", dpf: "Défaut Position Tiroir",
-          ec: "Condition d'Erreur", hpf: "Défaut Position Hall", off: "Éteint", offline: "Hors Ligne",
-          otf: "Défaut Surtorque", p: "En Pause", pd: "Détection Coussin", pwrd: "Énergie Épuisée",
-          pwru: "Mise sous Tension", rdy: "Prêt", scf: "Défaut Contact Capteur", sdf: "Défaut Capteur Tiroir",
-          spf: "Défaut Position Capteur"
-        },
-        hopper: {
-          enabled: "Activé", disabled: "Désactivé", empty: "Vide",
-          motor_fault_short: "Défaut Moteur (Court)", motor_ot_amps: "Moteur Surintensité",
-          motor_disconnected: "Moteur Déconnecté"
-        }
-      }
-    };
   }
 
   static async getConfigElement() {
@@ -217,23 +113,15 @@ class LitterRobot4Card extends HTMLElement {
   async _loadTranslations(language) {
     if (this._loadedLanguages.has(language)) return;
     
-    // First try to use embedded translations
-    if (this._embeddedTranslations[language]) {
-      this._translations[language] = this._embeddedTranslations[language];
-      this._loadedLanguages.add(language);
-      console.debug(`Using embedded translations for ${language}`);
-      return;
-    }
-    
-    // If no embedded translation, try to load from external files
+    // Add cache busting parameter
     const cacheBuster = Date.now();
     
-    // Try multiple possible paths for translation files
+    // Try paths in order of preference based on HACS documentation
     const possiblePaths = [
-      `/local/community/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,
-      `/hacsfiles/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,
-      `/local/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,
-      `/local/litter-robot4-card/translations/${language}.json?v=${cacheBuster}`
+      `/hacsfiles/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,  // Official HACS path
+      `/local/community/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,  // Alternative HACS path
+      `/local/LitterRobot4Card/translations/${language}.json?v=${cacheBuster}`,  // Manual installation
+      `/local/litter-robot4-card/translations/${language}.json?v=${cacheBuster}`  // Alternative manual path
     ];
     
     let translationsLoaded = false;
@@ -262,8 +150,32 @@ class LitterRobot4Card extends HTMLElement {
         return;
       }
       
-      // Final fallback to hardcoded English if even embedded translations fail
-      this._translations[language] = this._embeddedTranslations['en'];
+      // Final fallback to hardcoded English translations
+      this._translations[language] = {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Litter",
+          waste: "Waste",
+          full: "Full",
+          pet_weight: "Pet Weight",
+          hopper: "Litter Hopper"
+        },
+        status: {
+          br: "Bonnet Removed", ccc: "Clean Cycle Complete", ccp: "Clean Cycle In Progress",
+          cd: "Clean Cycle Done", csf: "Cat Sensor Fault", csi: "Cat Sensor Interrupted",
+          cst: "Cat Sensor Timing", df1: "Drawer Full (1)", df2: "Drawer Full (2)",
+          dfs: "Drawer Full Sensor", dhf: "Drawer Hall Sensor Fault", dpf: "Drawer Position Fault",
+          ec: "Error Condition", hpf: "Hall Position Fault", off: "Power Off", offline: "Offline",
+          otf: "Over Torque Fault", p: "Paused", pd: "Pad Detect", pwrd: "Power Drained",
+          pwru: "Power Up", rdy: "Ready", scf: "Sensor Contact Fault", sdf: "Sensor Drawer Fault",
+          spf: "Sensor Position Fault"
+        },
+        hopper: {
+          enabled: "Enabled", disabled: "Disabled", empty: "Empty",
+          motor_fault_short: "Motor Fault (Short)", motor_ot_amps: "Motor Overcurrent",
+          motor_disconnected: "Motor Disconnected"
+        }
+      };
       this._loadedLanguages.add(language);
     }
   }
