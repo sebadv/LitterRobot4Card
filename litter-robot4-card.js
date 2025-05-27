@@ -207,7 +207,10 @@ class LitterRobot4Card extends HTMLElement {
       language: config.language || "en"
     };
     
-    this._updateContent();
+    // Only update content if hass is ready
+    if (this._hass && this._hass.states) {
+      this._updateContent();
+    }
   }
 
   _(key) {
@@ -279,7 +282,7 @@ class LitterRobot4Card extends HTMLElement {
   }
 
   _updateContent() {
-    if (!this._hass || !this._config) return;
+    if (!this._hass || !this._hass.states || !this._config) return;
 
     const [statusEntity, litterEntity, wasteEntity, hopperEntity] = (this._config.entities || []).map(entityId => entityId && entityId !== "" ? this._hass.states[entityId] : undefined);
     const petWeightEntities = (this._config.pet_weight_entities || []).map(entityId => entityId && entityId !== "" ? this._hass.states[entityId] : undefined).filter(entity => entity !== undefined);
