@@ -477,14 +477,14 @@ class LitterRobot4Editor extends HTMLElement {
     // Define elements that should be allowed to function normally
     const allowedTags = ['SELECT', 'OPTION', 'INPUT', 'LABEL', 'MDC-MENU', 'MDC-LIST', 'HA-TEXTFIELD', 'HA-ENTITY-PICKER'];
     
-    // Check if the event is inside our editor (clearly separated)
+    // Check if the event is inside our editor (bulletproof case-insensitive matching)
     const isInsideEditor = path.some(el => {
-      return el && el.tagName === 'LITTER-ROBOT4-EDITOR';
+      return el && el.tagName && el.tagName.toUpperCase() === 'LITTER-ROBOT4-EDITOR';
     });
     
-    // Check if the event target is an allowed interactive element (clearly separated)
+    // Check if the event target is an allowed interactive element (bulletproof case-insensitive matching)
     const isAllowedInteractive = path.some(el => {
-      return el && el.tagName && allowedTags.includes(el.tagName);
+      return el && el.tagName && allowedTags.includes(el.tagName.toUpperCase());
     });
     
     // Only intercept events that are:
