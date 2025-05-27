@@ -525,15 +525,18 @@ class LitterRobot4Editor extends HTMLElement {
       composed: ev.composed
     });
     
-    // Add debugger to catch events in real-time
-    if (ev.type === 'click' || ev.type === 'mousedown' || ev.type === 'focusout' || ev.type === 'blur') {
-      console.debug(`🚨 CRITICAL EVENT: ${ev.type} - Breaking for inspection`);
-      debugger;
-    }
-    
     // Get the composed path to check if event originated from our editor
     const path = ev.composedPath();
     console.debug(`📍 Event path:`, path.map(el => el.tagName || el.nodeName || el.toString()));
+    
+    // CRITICAL FIX: Bail early if event did not originate from inside the editor
+    const isFromEditor = path.some(el => el?.tagName?.toUpperCase() === 'LITTER-ROBOT4-EDITOR');
+    if (!isFromEditor) {
+      console.debug(`🚫 Event not from editor - ignoring`);
+      return;
+    }
+    
+    console.debug(`✅ Event confirmed from editor - proceeding with analysis`);
     
     // Define elements that should be allowed to function normally
     const allowedTags = ['SELECT', 'OPTION', 'INPUT', 'LABEL', 'MDC-MENU', 'MDC-LIST', 'HA-TEXTFIELD', 'HA-ENTITY-PICKER'];
@@ -632,6 +635,8 @@ class LitterRobot4Editor extends HTMLElement {
             /* Ensure proper stacking context */
             position: relative;
             z-index: 1;
+            /* Stronger containment to prevent layout reflows closing dropdowns */
+            contain: layout style;
           }
           
           .config-section {
