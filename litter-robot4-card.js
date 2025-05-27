@@ -443,6 +443,7 @@ class LitterRobot4Editor extends HTMLElement {
     super();
     this._config = {};
     this._hass = {};
+    this._isUpdating = false; // Flag to prevent recursive updates
   }
 
   static get properties() {
@@ -470,6 +471,9 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   set hass(hass) {
+    // Prevent recursive calls
+    if (this._isUpdating) return;
+    
     this._hass = hass;
     this._updateEditor();
   }
@@ -479,45 +483,54 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _updateEditor() {
-    if (!this._hass || !this._config) return;
+    if (!this._hass || !this._config || this._isUpdating) return;
 
-    // Clear existing content
-    this.innerHTML = '';
+    // Set flag to prevent recursive updates
+    this._isUpdating = true;
 
-    // Create container div
-    const container = document.createElement('div');
-    container.className = 'editor-container';
-    container.style.padding = '16px';
+    try {
+      // Clear existing content
+      this.innerHTML = '';
 
-    // Create ha-form element properly
-    const haForm = document.createElement('ha-form');
-    
-    // Set properties directly on the element
-    haForm.hass = this._hass;
-    haForm.data = this._config;
-    haForm.schema = this._getSchema();
-    haForm.computeLabel = this._computeLabel.bind(this);
+      // Create container div
+      const container = document.createElement('div');
+      container.className = 'editor-container';
+      container.style.padding = '16px';
 
-    // Add proper event handling
-    haForm.addEventListener('value-changed', (ev) => {
-      // Stop event propagation to prevent dropdown closing
-      ev.stopPropagation();
-      this._valueChanged(ev);
-    });
+      // Create ha-form element properly
+      const haForm = document.createElement('ha-form');
+      
+      // Set properties directly on the element (but carefully to avoid recursion)
+      Object.defineProperty(haForm, '_hass', { value: this._hass, writable: true });
+      haForm.hass = this._hass;
+      haForm.data = this._config;
+      haForm.schema = this._getSchema();
+      haForm.computeLabel = this._computeLabel.bind(this);
 
-    // Prevent clicks inside the form from bubbling up
-    haForm.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-    });
+      // Add proper event handling
+      haForm.addEventListener('value-changed', (ev) => {
+        // Stop event propagation to prevent dropdown closing
+        ev.stopPropagation();
+        this._valueChanged(ev);
+      });
 
-    // Prevent mousedown events from bubbling up (important for dropdowns)
-    haForm.addEventListener('mousedown', (ev) => {
-      ev.stopPropagation();
-    });
+      // Prevent clicks inside the form from bubbling up
+      haForm.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+      });
 
-    // Add the form to the container and container to the editor
-    container.appendChild(haForm);
-    this.appendChild(container);
+      // Prevent mousedown events from bubbling up (important for dropdowns)
+      haForm.addEventListener('mousedown', (ev) => {
+        ev.stopPropagation();
+      });
+
+      // Add the form to the container and container to the editor
+      container.appendChild(haForm);
+      this.appendChild(container);
+    } finally {
+      // Always reset the flag
+      this._isUpdating = false;
+    }
   }
 
   _getSchema() {
