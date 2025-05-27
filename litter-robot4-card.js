@@ -451,6 +451,45 @@ class LitterRobot4Editor extends HTMLElement {
     
     // Create shadow DOM for proper encapsulation
     this.attachShadow({ mode: 'open' });
+    
+    // Bind the global event interceptor
+    this._interceptOutsideClicks = this._interceptOutsideClicks.bind(this);
+  }
+
+  connectedCallback() {
+    // Add global event interceptors when element is connected to DOM
+    window.addEventListener('click', this._interceptOutsideClicks, true);
+    window.addEventListener('focus', this._interceptOutsideClicks, true);
+    window.addEventListener('mousedown', this._interceptOutsideClicks, true);
+    window.addEventListener('mouseup', this._interceptOutsideClicks, true);
+  }
+
+  disconnectedCallback() {
+    // Clean up global event listeners when element is removed
+    window.removeEventListener('click', this._interceptOutsideClicks, true);
+    window.removeEventListener('focus', this._interceptOutsideClicks, true);
+    window.removeEventListener('mousedown', this._interceptOutsideClicks, true);
+    window.removeEventListener('mouseup', this._interceptOutsideClicks, true);
+  }
+
+  _interceptOutsideClicks(ev) {
+    // Get the composed path to check if event originated from our editor
+    const path = ev.composedPath();
+    
+    // Check if the event path includes our editor element
+    if (path.some(el => {
+      return el && el.tagName === 'LITTER-ROBOT4-EDITOR' || 
+             (el && el.shadowRoot && el.shadowRoot.contains && el.shadowRoot.contains(ev.target));
+    })) {
+      // Event originated from inside our editor - stop it from reaching HA's handlers
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
+      
+      // For certain events, also prevent default behavior
+      if (ev.type === 'mousedown' || ev.type === 'mouseup') {
+        ev.preventDefault();
+      }
+    }
   }
 
   setConfig(config) {
@@ -677,31 +716,22 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _addEventListeners() {
-    // Add event listeners with focus management to prevent dropdown closing
+    // With global event interception, we only need to handle change events locally
     const selects = this.shadowRoot.querySelectorAll('select');
     const inputs = this.shadowRoot.querySelectorAll('input');
     
-    // Apply comprehensive event stopping to all interactive elements
-    [...selects, ...inputs].forEach(element => {
-      // Apply the _stopAllEvents method to all relevant events
-      ['click', 'mousedown', 'mouseup', 'focus', 'blur', 'keydown', 'keyup', 'focusin', 'focusout'].forEach(eventType => {
-        element.addEventListener(eventType, this._stopAllEvents.bind(this), true);
+    // Add change handlers for selects
+    selects.forEach(select => {
+      select.addEventListener('change', (e) => {
+        this._handleSelectChange(e);
       });
     });
     
-    // Add specific change handlers after stopping all other events
-    selects.forEach(select => {
-      select.addEventListener('change', (e) => {
-        this._stopAllEvents(e);
-        this._handleSelectChange(e);
-      }, true);
-    });
-    
+    // Add change handlers for inputs
     inputs.forEach(input => {
       input.addEventListener('change', (e) => {
-        this._stopAllEvents(e);
         this._handleInputChange(e);
-      }, true);
+      });
     });
     
     // Detect if we're in a modal and add appropriate class
@@ -711,6 +741,7 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _stopAllEvents(e) {
+    // This method is now primarily used by the global interceptor
     e.stopPropagation();
     e.stopImmediatePropagation();
     
