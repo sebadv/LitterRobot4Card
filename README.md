@@ -1,198 +1,134 @@
 # Litter-Robot 4 Card
 
-A Home Assistant Lovelace custom card that displays Litter-Robot 4 status, litter level, waste drawer, and optional Litter Hopper information.
+A custom Home Assistant card for displaying Litter-Robot 4 status with support for litter level, waste drawer, optional hopper, and pet weight tracking.
 
-![Litter-Robot 4 Card](https://raw.githubusercontent.com/sebadv/LitterRobot4Card/main/images/card.png)
+## Features
 
-## Prerequisites
-
-1. Home Assistant installed
-2. HACS (Home Assistant Community Store) installed
-3. [Litter-Robot Integration](https://www.home-assistant.io/integrations/litterrobot/) set up in Home Assistant
+- **Status Display**: Shows current Litter-Robot 4 status with color-coded indicators
+- **Litter Level**: Visual indicator of litter level with color coding (green/yellow/red)
+- **Waste Drawer**: Shows waste level with appropriate color indicators
+- **Optional Hopper Support**: Display litter hopper status if available
+- **Pet Weight Tracking**: Support for multiple pet weight entities
+- **Multi-language Support**: Built-in translations for English, Spanish, Dutch, and French
+- **Full UI Editor**: Complete configuration interface with entity dropdowns and settings
+- **HACS Compatible**: Easy installation and updates through HACS
 
 ## Installation
 
-### HACS Installation (Recommended)
+### HACS (Recommended)
 
-1. Open HACS in your Home Assistant instance
-2. Click on "Frontend" in the sidebar
-3. Click the "+ Explore & Download Repositories" button
-4. Search for "Litter-Robot 4"
+1. Open HACS in Home Assistant
+2. Go to "Frontend" section
+3. Click the "+" button
+4. Search for "Litter-Robot 4 Card"
 5. Click "Download"
 6. Restart Home Assistant
 
 ### Manual Installation
 
-1. Download the latest release files from [GitHub releases](https://github.com/sebadv/LitterRobot4Card/releases)
-2. Create the directory structure in your Home Assistant:
-   ```
-   config/www/litter-robot4-card/
-   ├── litter-robot4-card.js
-   └── translations/
-       ├── en.json
-       ├── es.json
-       ├── nl.json
-       └── fr.json
-   ```
-3. Copy all files to their respective locations
-4. Add the following to your Lovelace resources:
-   ```yaml
-   resources:
-     - url: /local/litter-robot4-card/litter-robot4-card.js
-       type: module
-   ```
+1. Download `litter-robot4-card.js` from the latest release
+2. Copy the file to your `config/www/` directory
+3. Add the resource to your dashboard:
+   - Go to Settings → Dashboards → Resources
+   - Click "Add Resource"
+   - URL: `/local/litter-robot4-card.js`
+   - Resource Type: JavaScript Module
 
 ## Configuration
 
-### Using the UI
+### Using the UI Editor (Recommended)
 
-1. Add the card to your dashboard:
-   - Click the three dots menu in the top right of your dashboard
-   - Select "Edit Dashboard"
-   - Click the "+" button to add a new card
-   - Search for "Litter-Robot 4"
+1. In your dashboard, click "Add Card"
+2. Search for "Litter-Robot 4 Card"
+3. Configure the required entities:
+   - **Status Code Entity** (required)
+   - **Litter Level Entity** (required) 
+   - **Waste Drawer Entity** (required)
+4. Optionally configure:
+   - **Litter Hopper Entity**
+   - **Pet Weight Entities** (add multiple pets)
+   - **Language** (English, Spanish, Dutch, French)
+   - **Metric Units** (kg vs lbs for pet weights)
 
-2. Configure the card:
-   - Click "Configure" on the card
-   - Required Entities:
-     - Status Entity: Shows the current operation status
-     - Litter Level Entity: Shows how full the litter box is
-     - Waste Drawer Entity: Shows the waste drawer status
-   - Optional Settings:
-     - Litter Hopper Entity: Shows the litter hopper status (if available)
-     - Pet Weight Entities: Add multiple pet weight sensors
-     - Language: Choose from English, Spanish, Dutch, or French
-     - Use Metric Units: Toggle between pounds (lbs) and kilograms (kg)
-
-### Using YAML
+### Manual YAML Configuration
 
 ```yaml
 type: custom:litter-robot4-card
 entities:
-  - sensor.litterrobot_status_code    # Required: The status code sensor
-  - sensor.litterrobot_litter_level   # Required: Litter level sensor
-  - sensor.litterrobot_waste_drawer   # Required: Waste drawer sensor
-  - sensor.litterrobot_litter_hopper  # Optional: Litter hopper sensor
-pet_weight_entities:  # Optional: List of pet weight sensors
-  - sensor.cat1_weight
-  - sensor.cat2_weight
-  # Add as many pet weight sensors as needed
-language: en  # Optional: 'en', 'es', 'nl', or 'fr' (defaults to 'en')
-use_metric: false  # Optional: Set to true for kg instead of lbs (defaults to false)
+  - sensor.litter_robot_status_code    # Required: Status
+  - sensor.litter_robot_litter_level   # Required: Litter level
+  - sensor.litter_robot_waste_level    # Required: Waste level  
+  - sensor.litter_robot_hopper_status  # Optional: Hopper
+pet_weight_entities:
+  - sensor.pet1_weight                 # Optional: Pet weights
+  - sensor.pet2_weight
+language: en                           # Optional: en, es, nl, fr
+use_metric: false                      # Optional: true for kg, false for lbs
 ```
 
-### Configuration Options
+## Supported Languages
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| entities | array | required | List of main entities in order: [status_code, litter_level, waste_drawer, litter_hopper] |
-| pet_weight_entities | array | optional | List of pet weight sensor entities |
-| language | string | 'en' | Interface language ('en', 'es', 'nl', 'fr') |
-| use_metric | boolean | false | Set to `true` to display weight in kg instead of lbs |
+The card includes built-in translations for:
+- **English** (en) - Default
+- **Spanish** (es) 
+- **Dutch** (nl)
+- **French** (fr)
 
-### Available Languages
+Translations are embedded directly in the card following HACS best practices.
 
-The card supports multiple languages with external translation files:
+## Entity Requirements
 
-- **English (en)** - Default language with fallback support
-- **Spanish (es)** - Complete Spanish translations
-- **Dutch (nl)** - Complete Dutch translations  
-- **French (fr)** - Complete French translations
+### Required Entities
+- **Status Code Entity**: Sensor showing Litter-Robot status codes (br, ccc, rdy, etc.)
+- **Litter Level Entity**: Sensor showing litter level percentage (0-100)
+- **Waste Drawer Entity**: Sensor showing waste level percentage (0-100)
 
-Translation files are automatically loaded based on the configured language. If a translation file fails to load, the card falls back to English.
+### Optional Entities
+- **Litter Hopper Entity**: Sensor showing hopper status (enabled, disabled, empty, etc.)
+- **Pet Weight Entities**: Sensors showing pet weights in pounds or kilograms
 
-### Litter Hopper Support
+## Status Codes
 
-The card now supports the optional Litter Hopper entity with the following states:
+The card recognizes these Litter-Robot 4 status codes:
 
-- 🟢 **Enabled**: Hopper is working normally
-- ⚫ **Disabled**: Hopper is turned off
-- 🟡 **Empty**: Hopper needs refilling
-- 🔴 **Motor Fault (Short)**: Motor short circuit error
-- 🔴 **Motor Overcurrent**: Motor drawing too much current
-- 🔴 **Motor Disconnected**: Motor connection issue
+| Code | Meaning | Color |
+|------|---------|-------|
+| `rdy` | Ready | Blue |
+| `ccc` | Clean Cycle Complete | Blue |
+| `ccp` | Clean Cycle In Progress | Orange |
+| `cd` | Clean Cycle Done | Blue |
+| `p` | Paused | Yellow |
+| `off` | Power Off | Gray |
+| `br` | Bonnet Removed | Red |
+| `df1`/`df2` | Drawer Full | Red |
+| `csf` | Cat Sensor Fault | Red |
 
-### Status Indicators
+## Hopper States
 
-The card uses color-coded indicators for different states:
+If you have a hopper entity configured, these states are supported:
 
-- Status Colors:
-  - 🔵 Blue: Ready, Clean Cycle Complete, Clean Cycle Done
-  - 🟠 Orange: Clean Cycle In Progress
-  - 🔴 Red: Various error states and faults
-  - 🟡 Yellow: Paused, Power Up, Power Drained, Pad Detect
-  - ⚫ Gray: Power Off, Offline
+| State | Meaning | Color |
+|-------|---------|-------|
+| `enabled` | Hopper Enabled | Green |
+| `disabled` | Hopper Disabled | Gray |
+| `empty` | Hopper Empty | Yellow |
+| `motor_fault_short` | Motor Fault | Red |
+| `motor_ot_amps` | Motor Overcurrent | Red |
+| `motor_disconnected` | Motor Disconnected | Red |
 
-- Litter Level Colors:
-  - 🟢 Green: ≥ 70%
-  - 🟡 Yellow: 40-69%
-  - 🔴 Red: < 40%
+## Development
 
-- Waste Drawer Colors:
-  - 🟢 Green: ≤ 70%
-  - 🟡 Yellow: 71-90%
-  - 🔴 Red: > 90%
-
-## Features
-
-- Real-time status display with color indicators
-- Litter level monitoring
-- Waste drawer level monitoring
-- Litter Hopper status monitoring (optional)
-- Multiple pet weight tracking
-- Multi-language support with external translation files
-- Metric/Imperial unit conversion
-- Interactive elements (click for more details)
-- Modern, clean design that matches Home Assistant's theme
-- Automatic fallback to English if translation files fail to load
-
-## Language File Structure
-
-Translation files are stored in JSON format in the `translations/` directory:
-
-```json
-{
-  "common": {
-    "title": "Litter-Robot 4",
-    "litter": "Litter",
-    "waste": "Waste",
-    "full": "Full",
-    "pet_weight": "Pet Weight",
-    "hopper": "Litter Hopper"
-  },
-  "status": {
-    "rdy": "Ready",
-    "ccp": "Clean Cycle In Progress",
-    // ... more status translations
-  },
-  "hopper": {
-    "enabled": "Enabled",
-    "disabled": "Disabled",
-    "empty": "Empty",
-    // ... more hopper state translations
-  }
-}
-```
+This card is built using vanilla JavaScript following HACS best practices. No external dependencies or build tools required.
 
 ## Support
 
-If you like this card, feel free to buy me a coffee:
+If you encounter issues:
 
-[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/sebadv)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Adding New Languages
-
-To add a new language:
-
-1. Create a new JSON file in the `translations/` directory (e.g., `de.json` for German)
-2. Copy the structure from `en.json` and translate all values
-3. Update the card's language loading logic to include the new language
-4. Submit a Pull Request
+1. Check that all required entities exist and have valid states
+2. Verify entity names in the configuration
+3. Check the browser console for error messages
+4. Report issues on the GitHub repository
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+MIT License - see LICENSE file for details. 
