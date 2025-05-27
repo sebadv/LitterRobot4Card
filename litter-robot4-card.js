@@ -478,38 +478,43 @@ class LitterRobot4Editor extends HTMLElement {
   _updateEditor() {
     if (!this._hass || !this._config) return;
 
-    // Create container div to prevent event bubbling issues
-    this.innerHTML = `
-      <div class="editor-container" style="padding: 16px;">
-        <ha-form
-          .hass=${this._hass}
-          .data=${this._config}
-          .schema=${this._getSchema()}
-          .computeLabel=${this._computeLabel.bind(this)}
-        ></ha-form>
-      </div>
-    `;
+    // Clear existing content
+    this.innerHTML = '';
 
-    // Get the ha-form element and add proper event handling
-    const haForm = this.querySelector('ha-form');
-    if (haForm) {
-      // Add event listener with proper event handling
-      haForm.addEventListener('value-changed', (ev) => {
-        // Stop event propagation to prevent dropdown closing
-        ev.stopPropagation();
-        this._valueChanged(ev);
-      });
+    // Create container div
+    const container = document.createElement('div');
+    container.className = 'editor-container';
+    container.style.padding = '16px';
 
-      // Prevent clicks inside the form from bubbling up
-      haForm.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-      });
+    // Create ha-form element properly
+    const haForm = document.createElement('ha-form');
+    
+    // Set properties directly on the element
+    haForm.hass = this._hass;
+    haForm.data = this._config;
+    haForm.schema = this._getSchema();
+    haForm.computeLabel = this._computeLabel.bind(this);
 
-      // Prevent mousedown events from bubbling up (important for dropdowns)
-      haForm.addEventListener('mousedown', (ev) => {
-        ev.stopPropagation();
-      });
-    }
+    // Add proper event handling
+    haForm.addEventListener('value-changed', (ev) => {
+      // Stop event propagation to prevent dropdown closing
+      ev.stopPropagation();
+      this._valueChanged(ev);
+    });
+
+    // Prevent clicks inside the form from bubbling up
+    haForm.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+    });
+
+    // Prevent mousedown events from bubbling up (important for dropdowns)
+    haForm.addEventListener('mousedown', (ev) => {
+      ev.stopPropagation();
+    });
+
+    // Add the form to the container and container to the editor
+    container.appendChild(haForm);
+    this.appendChild(container);
   }
 
   _getSchema() {
