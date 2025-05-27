@@ -3,7 +3,7 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-import LitElement from 'lit';
+import { LitElement, html, css } from 'lit';
 // Translation variables
 var ht = {title: "Litter-Robot 4", litter: "Litter", waste: "Waste", full: "Full", pet_weight: "Pet Weight", hopper: "Litter Hopper"};
 var hopper_en = {enabled: "Enabled", disabled: "Disabled", empty: "Empty", motor_fault_short: "Motor Fault (Short)", motor_ot_amps: "Motor Overcurrent", motor_disconnected: "Motor Disconnected"};
@@ -38,30 +38,36 @@ try {
 } catch (t) {
   console.error("Error adding to custom cards list:", t);
 }
-class xt extends LitElement {
+class LitterRobot4Card extends LitElement {
   static async getConfigElement() {
     await customElements.whenDefined("litter-robot4-editor");
     return document.createElement("litter-robot4-editor");
   }
   static getStubConfig() {
-    return {type: "custom:litter-robot4-card", entities: ["", "", ""], pet_weight_entities: [], language: "en"};
+    return {type: "custom:litter-robot4-card", entities: ["", "", "", ""], pet_weight_entities: [], language: "en"};
   }
   static get properties() {
     return {hass: {type: Object}, _config: {type: Object}};
   }
   setConfig(t) {
     if (!t) throw new Error("Invalid configuration");
-    this._config = Object.assign(Object.assign({}, t), {entities: t.entities || [], pet_weight_entities: t.pet_weight_entities || [], use_metric: t.use_metric || false, language: t.language || "en"});
+    this._config = {
+      ...t,
+      entities: t.entities || [],
+      pet_weight_entities: t.pet_weight_entities || [],
+      use_metric: t.use_metric || false,
+      language: t.language || "en"
+    };
   }
   _(t) {
-    var e;
-    const i = (null === (e = this._config) || void 0 === e ? void 0 : e.language) || "en", s = t.split(".");
-    let o = Pt[i];
-    for (const e of s) {
-      if (!o || "object" != typeof o) return t;
-      o = o[e];
+    const language = this._config?.language || "en";
+    const keys = t.split(".");
+    let translation = Pt[language];
+    for (const k of keys) {
+      if (!translation || typeof translation !== "object") return t;
+      translation = translation[k];
     }
-    return o || t;
+    return translation || t;
   }
   getReadableStatus(t) {
     return this._(`status.${t}`) || `Unknown (${t})`;
@@ -81,63 +87,59 @@ class xt extends LitElement {
     this.dispatchEvent(e);
   }
   convertWeight(t) {
-    var e;
     if (!t || isNaN(Number(t))) return "";
     const i = Number(t);
-    return null === (e = this._config) || void 0 === e ? void 0 : e.use_metric ? `${(0.453592 * i).toFixed(1)} kg` : `${i} lbs`;
+    return this._config?.use_metric ? `${(0.453592 * i).toFixed(1)} kg` : `${i} lbs`;
   }
   render() {
-    var t, e;
-    if (!this.hass || !this._config) return I``;
-    const [i, s, o] = (this._config.entities || []).map((t => t ? this.hass.states[t] : void 0)), n = (this._config.pet_weight_entities || []).map((t => t ? this.hass.states[t] : void 0)).filter((t => void 0 !== t)), r = Number(null === s ? void 0 : s.state), a = Number(null === o ? void 0 : o.state), l = isNaN(r) ? "--" : `${Math.round(r)}%`, c = isNaN(a) ? "--" : `${Math.round(a)}%`, d = isNaN(r) ? "red" : this.getLitterColor(r), h = isNaN(a) ? "red" : this.getWasteColor(a), u = this.getReadableStatus(null !== (t = null === i ? void 0 : i.state) && void 0 !== t ? t : ""), p = this.getStatusColor(null !== (e = null === i ? void 0 : i.state) && void 0 !== e ? e : "");
-    return I`
+    if (!this.hass || !this._config) return html``;
+
+    const [statusEntity, litterEntity, wasteEntity, hopperEntity] = (this._config.entities || []).map(entityId => entityId ? this.hass.states[entityId] : undefined);
+    const petWeightEntities = (this._config.pet_weight_entities || []).map(entityId => entityId ? this.hass.states[entityId] : undefined).filter(entity => entity !== undefined);
+
+    const litterLevel = Number(litterEntity?.state);
+    const wasteLevel = Number(wasteEntity?.state);
+    const litterDisplay = isNaN(litterLevel) ? "--" : `${Math.round(litterLevel)}%`;
+    const wasteDisplay = isNaN(wasteLevel) ? "--" : `${Math.round(wasteLevel)}%`;
+    const litterColor = isNaN(litterLevel) ? "red" : this.getLitterColor(litterLevel);
+    const wasteColor = isNaN(wasteLevel) ? "red" : this.getWasteColor(wasteLevel);
+    const statusText = this.getReadableStatus(statusEntity?.state || "");
+    const statusColor = this.getStatusColor(statusEntity?.state || "");
+
+    return html`
       <ha-card>
         <div class="title">${this._("common.title")}</div>
 
-        <div class="status clickable" @click=${() => this._showMoreInfo((null === i ? void 0 : i.entity_id) || "")}>
-          <div class="status-icon ${p}"></div>
-          <div class="label">${u}</div>
+        <div class="status clickable" @click=${() => this._showMoreInfo(statusEntity?.entity_id || "")}>
+          <div class="status-icon ${statusColor}"></div>
+          <div class="label">${statusText}</div>
         </div>
 
-        <div class="item clickable" @click=${() => this._showMoreInfo((null === s ? void 0 : s.entity_id) || "")}>
-          <div class="icon ${d}"></div>
-          <div class="label">${this._("common.litter")}: ${l}</div>
+        <div class="item clickable" @click=${() => this._showMoreInfo(litterEntity?.entity_id || "")}>
+          <div class="icon ${litterColor}"></div>
+          <div class="label">${this._("common.litter")}: ${litterDisplay}</div>
         </div>
 
-        <div class="item clickable" @click=${() => this._showMoreInfo((null === o ? void 0 : o.entity_id) || "")}>
-          <div class="icon ${h}"></div>
-          <div class="label">${this._("common.waste")}: ${c} ${this._("common.full")}</div>
+        <div class="item clickable" @click=${() => this._showMoreInfo(wasteEntity?.entity_id || "")}>
+          <div class="icon ${wasteColor}"></div>
+          <div class="label">${this._("common.waste")}: ${wasteDisplay} ${this._("common.full")}</div>
         </div>
 
-        ${t[3] ? I`
-          <div class="item clickable" @click=${()=>this._showMoreInfo(t[3])}>
-            <div class="icon ${this._getHopperIcon(t[3])}"></div>
-            <div class="label">${this._("common.hopper")}: ${this._getHopperState(t[3])}</div>
+        ${hopperEntity ? html`
+          <div class="item clickable" @click=${() => this._showMoreInfo(hopperEntity.entity_id)}>
+            <div class="icon ${this._getHopperIcon(hopperEntity.entity_id)}"></div>
+            <div class="label">${this._("common.hopper")}: ${this._getHopperState(hopperEntity.entity_id)}</div>
           </div>
         ` : ""}
 
-        ${n.length>0?I`
+        ${petWeightEntities.length > 0 ? html`
           <div class="pet-weights">
-            ${n.map((t=>{var e;return I`
-              <div class="item clickable" @click=${()=>this._showMoreInfo((null==t?void 0:t.entity_id)||"")}>
+            ${petWeightEntities.map(entity => html`
+              <div class="item clickable" @click=${() => this._showMoreInfo(entity.entity_id || "")}>
                 <div class="icon blue"></div>
-                <div class="label">${(null===(e=null==t?void 0:t.attributes)||void 0===e?void 0:e.friendly_name)||this._("common.pet_weight")}: ${this.convertWeight((null==t?void 0:t.state)||"")}</div>
+                <div class="label">${entity.attributes?.friendly_name || this._("common.pet_weight")}: ${this.convertWeight(entity.state || "")}</div>
               </div>
-            `}))}
-          </div>
-        ` : ""}
-
-        ${n.length > 0 ? I`
-          <div class="pet-weights">
-            ${n.map((t => {
-              var e;
-              return I`
-                <div class="item clickable" @click=${() => this._showMoreInfo((null === t ? void 0 : t.entity_id) || "")}>
-                  <div class="icon blue"></div>
-                  <div class="label">${(null === (e = null === t ? void 0 : t.attributes) || void 0 === e ? void 0 : e.friendly_name) || this._("common.pet_weight")}: ${this.convertWeight((null === t ? void 0 : t.state) || "")}</div>
-                </div>
-              `;
-            }))}
+            `)}
           </div>
         ` : ""}
       </ha-card>
@@ -166,69 +168,141 @@ class xt extends LitElement {
     const state = this.hass.states[entityId]?.state;
     return this._(`hopper.${state}`) || state;
   }
+
+  static get styles() {
+    return css`
+      ha-card {
+        padding: 16px;
+        background: var(--card-background-color, white);
+        color: var(--primary-text-color, white);
+        border-radius: 12px;
+        font-family: 'Segoe UI', sans-serif;
+      }
+
+      .title {
+        font-size: 1.4rem;
+        font-weight: bold;
+        margin-bottom: 12px;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        margin: 4px 0 12px 0;
+      }
+
+      .status-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+
+      .item {
+        display: flex;
+        align-items: center;
+        margin: 6px 0;
+      }
+
+      .icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+
+      .pet-weights {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
+      }
+
+      .green { background-color: #4caf50; }
+      .yellow { background-color: #ffc107; }
+      .red { background-color: #f44336; }
+      .blue { background-color: #00b0ff; }
+      .orange { background-color: #ff9800; }
+      .gray { background-color: #9e9e9e; }
+
+      .label { font-size: 0.95rem; }
+
+      .clickable {
+        cursor: pointer;
+      }
+    `;
+  }
 }
-xt.styles = n`
-  ha-card {
-    padding: 16px;
-    background: var(--card-background-color, white);
-    color: var(--primary-text-color, white);
-    border-radius: 12px;
-    font-family: 'Segoe UI', sans-serif;
+
+class LitterRobot4Editor extends LitElement {
+  static get properties() {
+    return { hass: { type: Object }, config: { type: Object } };
   }
 
-  .title {
-    font-size: 1.4rem;
-    font-weight: bold;
-    margin-bottom: 12px;
+  setConfig(config) {
+    this.config = config;
   }
 
-  .status {
-    display: flex;
-    align-items: center;
-    margin: 4px 0 12px 0;
+  _valueChanged(ev, index) {
+    if (!this.config || !this.hass) return;
+    const target = ev.target;
+    const configValue = target.value;
+    
+    if (this.config.entities) {
+      this.config.entities[index] = configValue;
+    }
+    
+    const event = new CustomEvent("config-changed", {
+      detail: { config: this.config },
+      bubbles: true,
+      composed: true
+    });
+    this.dispatchEvent(event);
   }
 
-  .status-icon {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    margin-right: 8px;
+  render() {
+    if (!this.hass || !this.config) {
+      return html``;
+    }
+
+    const entities = this.config.entities || [];
+
+    return html`
+      <div class="card-config">
+        <div class="entities">
+          ${["Status Code Entity", "Litter Level Entity", "Waste Drawer Entity", "Litter Hopper Entity (optional)"].map((label, index) => html`
+            <div class="entity">
+              <ha-entity-picker
+                .hass=${this.hass}
+                .label=${label}
+                .value=${entities[index] || ""}
+                .includeDomains=${["sensor"]}
+                .required=${index < 3}
+                @value-changed=${(ev) => this._valueChanged(ev, index)}
+              ></ha-entity-picker>
+            </div>
+          `)}
+        </div>
+      </div>
+    `;
   }
 
-  .item {
-    display: flex;
-    align-items: center;
-    margin: 6px 0;
+  static get styles() {
+    return css`
+      .card-config {
+        padding: 16px;
+      }
+      .entity {
+        margin-bottom: 12px;
+      }
+    `;
   }
+}
 
-  .icon {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    margin-right: 8px;
-  }
-
-  .pet-weights {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
-  }
-
-  .green { background-color: #4caf50; }
-  .yellow { background-color: #ffc107; }
-  .red { background-color: #f44336; }
-  .blue { background-color: #00b0ff; }
-  .orange { background-color: #ff9800; }
-  .gray { background-color: #9e9e9e; }
-
-  .label { font-size: 0.95rem; }
-
-  .clickable {
-    cursor: pointer;
-  }
-`;
 try {
-  console.debug("Defining custom elements..."), customElements.define("litter-robot4-card", xt), customElements.define("litter-robot4-editor", dt), console.debug("Custom elements defined successfully");
-} catch (t) {
-  console.error("Error defining custom elements:", t);
+  console.debug("Defining custom elements...");
+  customElements.define("litter-robot4-card", LitterRobot4Card);
+  customElements.define("litter-robot4-editor", LitterRobot4Editor);
+  console.debug("Custom elements defined successfully");
+} catch (error) {
+  console.error("Error defining custom elements:", error);
 }
