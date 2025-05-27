@@ -441,24 +441,23 @@ class LitterRobot4Card extends HTMLElement {
 class LitterRobot4Editor extends HTMLElement {
   constructor() {
     super();
-    this._config = {};
+    this._config = {
+      entities: ["", "", "", ""],
+      pet_weight_entities: [],
+      language: "en",
+      use_metric: false
+    };
     this._hass = {};
   }
 
   setConfig(config) {
-    this._config = { ...config };
-    if (!this._config.entities) {
-      this._config.entities = ["", "", "", ""];
-    }
-    if (!this._config.pet_weight_entities) {
-      this._config.pet_weight_entities = [];
-    }
-    if (!this._config.language) {
-      this._config.language = "en";
-    }
-    if (!this._config.use_metric) {
-      this._config.use_metric = false;
-    }
+    this._config = {
+      entities: config.entities || ["", "", "", ""],
+      pet_weight_entities: config.pet_weight_entities || [],
+      language: config.language || "en",
+      use_metric: config.use_metric || false,
+      ...config
+    };
     this._render();
   }
 
@@ -472,9 +471,17 @@ class LitterRobot4Editor extends HTMLElement {
   }
 
   _render() {
-    if (!this._hass || !this._config) {
+    if (!this._hass || !this._hass.states || !this._config) {
       this.innerHTML = '<div style="padding: 16px;">Loading editor...</div>';
       return;
+    }
+
+    // Ensure entities array exists and has the right length
+    if (!this._config.entities || !Array.isArray(this._config.entities)) {
+      this._config.entities = ["", "", "", ""];
+    }
+    while (this._config.entities.length < 4) {
+      this._config.entities.push("");
     }
 
     try {
@@ -556,12 +563,12 @@ class LitterRobot4Editor extends HTMLElement {
       `;
 
       // Add event listeners
-      this.querySelector('#entity0').addEventListener('change', (e) => this._updateConfig('entities.0', e.target.value));
-      this.querySelector('#entity1').addEventListener('change', (e) => this._updateConfig('entities.1', e.target.value));
-      this.querySelector('#entity2').addEventListener('change', (e) => this._updateConfig('entities.2', e.target.value));
-      this.querySelector('#entity3').addEventListener('change', (e) => this._updateConfig('entities.3', e.target.value));
-      this.querySelector('#language').addEventListener('change', (e) => this._updateConfig('language', e.target.value));
-      this.querySelector('#useMetric').addEventListener('change', (e) => this._updateConfig('use_metric', e.target.checked));
+      this.querySelector('#entity0')?.addEventListener('change', (e) => this._updateConfig('entities.0', e.target.value));
+      this.querySelector('#entity1')?.addEventListener('change', (e) => this._updateConfig('entities.1', e.target.value));
+      this.querySelector('#entity2')?.addEventListener('change', (e) => this._updateConfig('entities.2', e.target.value));
+      this.querySelector('#entity3')?.addEventListener('change', (e) => this._updateConfig('entities.3', e.target.value));
+      this.querySelector('#language')?.addEventListener('change', (e) => this._updateConfig('language', e.target.value));
+      this.querySelector('#useMetric')?.addEventListener('change', (e) => this._updateConfig('use_metric', e.target.checked));
 
     } catch (error) {
       console.error('Error rendering editor:', error);
