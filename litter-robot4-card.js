@@ -21,14 +21,14 @@ const w=globalThis,A=w.trustedTypes,C=A?A.createPolicy("lit-html",{createHTML:t=
  * SPDX-License-Identifier: BSD-3-Clause
  */class nt extends b{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let o=s._$litPart$;if(void 0===o){const t=i?.renderBefore??null;s._$litPart$=o=new Q(e.insertBefore(k(),t),t,void 0,i??{})}return o._$AI(t),o})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return z}}nt._$litElement$=!0,nt.finalized=!0,ot.litElementHydrateSupport?.({LitElement:nt});const rt=ot.litElementPolyfillSupport;var at,lt;rt?.({LitElement:nt}),(ot.litElementVersions??=[]).push("4.2.0"),function(t){t.language="language",t.system="system",t.comma_decimal="comma_decimal",t.decimal_comma="decimal_comma",t.space_comma="space_comma",t.none="none"}(at||(at={})),function(t){t.language="language",t.system="system",t.am_pm="12",t.twenty_four="24"}(lt||(lt={}));var ct=function(t,e,i,s){s=s||{},i=null==i?{}:i;var o=new Event(e,{bubbles:void 0===s.bubbles||s.bubbles,cancelable:Boolean(s.cancelable),composed:void 0===s.composed||s.composed});return o.detail=i,t.dispatchEvent(o),o};class dt extends nt{static get properties(){return{hass:{type:Object},_config:{type:Object}}}setConfig(t){this._config=t}render(){if(!this.hass||!this._config)return I``;const t=this._config.entities||[],e=this._config.pet_weight_entities||[];return I`
       <div class="entities">
-        ${["Status Code Entity","Litter Level Entity","Waste Drawer Entity"].map(((e,i)=>I`
+        ${["Status Code Entity","Litter Level Entity","Waste Drawer Entity","Litter Hopper Entity"].map(((e,i)=>I`
           <div class="entity">
             <ha-entity-picker
               .hass=${this.hass}
               .label=${e}
               .value=${t[i]||""}
               .includeDomains=${["sensor"]}
-              .required=${!0}
+              .required=${i < 3}
               @value-changed=${t=>this._valueChanged(t,i)}
             ></ha-entity-picker>
           </div>
@@ -155,6 +155,13 @@ const w=globalThis,A=w.trustedTypes,C=A?A.createPolicy("lit-html",{createHTML:t=
           <div class="label">${this._("common.waste")}: ${c} ${this._("common.full")}</div>
         </div>
 
+        ${t[3] ? I`
+          <div class="item clickable" @click=${()=>this._showMoreInfo(t[3])}>
+            <div class="icon ${this._getHopperIcon(t[3])}"></div>
+            <div class="label">${this._("common.hopper")}: ${this._getHopperState(t[3])}</div>
+          </div>
+        ` : ""}
+
         ${n.length>0?I`
           <div class="pet-weights">
             ${n.map((t=>{var e;return I`
@@ -226,3 +233,104 @@ const w=globalThis,A=w.trustedTypes,C=A?A.createPolicy("lit-html",{createHTML:t=
       cursor: pointer;
     }
   `;try{console.debug("Defining custom elements..."),customElements.define("litter-robot4-card",xt),customElements.define("litter-robot4-editor",dt),console.debug("Custom elements defined successfully")}catch(t){console.error("Error defining custom elements:",t)}
+
+  _getHopperIcon(entityId) {
+    const state = this.hass.states[entityId]?.state;
+    switch(state) {
+      case 'enabled':
+        return 'green';
+      case 'disabled':
+        return 'gray';
+      case 'empty':
+        return 'yellow';
+      case 'motor_fault_short':
+      case 'motor_ot_amps':
+      case 'motor_disconnected':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  }
+
+  _getHopperState(entityId) {
+    const state = this.hass.states[entityId]?.state;
+    return this._(`hopper.${state}`) || state;
+  }
+
+  static get translations() {
+    return {
+      en: {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Litter Level",
+          waste: "Waste Drawer",
+          full: "full",
+          pet_weight: "Pet Weight",
+          hopper: "Litter Hopper"
+        },
+        hopper: {
+          enabled: "Enabled",
+          disabled: "Disabled",
+          empty: "Empty",
+          motor_fault_short: "Motor Fault (Short)",
+          motor_ot_amps: "Motor Overcurrent",
+          motor_disconnected: "Motor Disconnected"
+        }
+      },
+      es: {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Nivel de Arena",
+          waste: "Cajón de Desechos",
+          full: "lleno",
+          pet_weight: "Peso de la Mascota",
+          hopper: "Tolva de Arena"
+        },
+        hopper: {
+          enabled: "Activado",
+          disabled: "Desactivado",
+          empty: "Vacío",
+          motor_fault_short: "Fallo del Motor (Corto)",
+          motor_ot_amps: "Sobrecorriente del Motor",
+          motor_disconnected: "Motor Desconectado"
+        }
+      },
+      nl: {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Kattenbak Niveau",
+          waste: "Afvalbak",
+          full: "vol",
+          pet_weight: "Huisdier Gewicht",
+          hopper: "Kattenbak Hopper"
+        },
+        hopper: {
+          enabled: "Ingeschakeld",
+          disabled: "Uitgeschakeld",
+          empty: "Leeg",
+          motor_fault_short: "Motor Fout (Kortsluiting)",
+          motor_ot_amps: "Motor Overstroom",
+          motor_disconnected: "Motor Losgekoppeld"
+        }
+      },
+      fr: {
+        common: {
+          title: "Litter-Robot 4",
+          litter: "Niveau de Litière",
+          waste: "Bac à Déchets",
+          full: "plein",
+          pet_weight: "Poids de l'Animal",
+          hopper: "Trémie de Litière"
+        },
+        hopper: {
+          enabled: "Activé",
+          disabled: "Désactivé",
+          empty: "Vide",
+          motor_fault_short: "Défaut Moteur (Court-circuit)",
+          motor_ot_amps: "Surcharge Moteur",
+          motor_disconnected: "Moteur Déconnecté"
+        }
+      }
+    };
+  }
+}

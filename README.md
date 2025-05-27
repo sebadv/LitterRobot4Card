@@ -1,6 +1,6 @@
 # Litter-Robot 4 Card
 
-A Home Assistant Lovelace custom card that displays Litter-Robot 4 status, litter level, and waste drawer information.
+A Home Assistant Lovelace custom card that displays Litter-Robot 4 status, litter level, waste drawer, and optional Litter Hopper information.
 
 ![Litter-Robot 4 Card](https://raw.githubusercontent.com/sebadv/LitterRobot4Card/main/images/card.png)
 
@@ -61,6 +61,7 @@ entities:
   - sensor.litterrobot_status_code  # Required: The status code sensor
   - sensor.litterrobot_litter_level  # Required: Litter level sensor
   - sensor.litterrobot_waste_drawer  # Required: Waste drawer sensor
+  - sensor.litterrobot_hopper  # Optional: Litter Hopper sensor
 pet_weight_entities:  # Optional: List of pet weight sensors
   - sensor.cat1_weight
   - sensor.cat2_weight
@@ -73,7 +74,7 @@ use_metric: false  # Optional: Set to true for kg instead of lbs (defaults to fa
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| entities | array | required | List of main entities in order: [status_code, litter_level, waste_drawer] |
+| entities | array | required | List of main entities in order: [status_code, litter_level, waste_drawer, hopper] |
 | pet_weight_entities | array | optional | List of pet weight sensor entities |
 | language | string | 'en' | Interface language ('en', 'es', 'nl', 'fr') |
 | use_metric | boolean | false | Set to `true` to display weight in kg instead of lbs |
@@ -106,11 +107,18 @@ The card uses color-coded indicators for different states:
   - 🟡 Yellow: 71-90%
   - 🔴 Red: > 90%
 
+- Litter Hopper Colors:
+  - 🟢 Green: Enabled
+  - ⚫ Gray: Disabled
+  - 🟡 Yellow: Empty
+  - 🔴 Red: Motor Faults (Short, Overcurrent, Disconnected)
+
 ## Features
 
 - Real-time status display with color indicators
 - Litter level monitoring
 - Waste drawer level monitoring
+- Litter Hopper status monitoring (optional)
 - Multiple pet weight tracking
 - Multi-language support
 - Metric/Imperial unit conversion
