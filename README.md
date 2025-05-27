@@ -1,7 +1,5 @@
 # Litter-Robot 4 Card
 
-[![HACS Validate](https://github.com/sebadv/LitterRobot4Card/actions/workflows/validate.yaml/badge.svg)](https://github.com/sebadv/LitterRobot4Card/actions/workflows/validate.yaml)
-
 A Home Assistant Lovelace custom card that displays Litter-Robot 4 status, litter level, and waste drawer information.
 
 ![Litter-Robot 4 Card](https://raw.githubusercontent.com/sebadv/LitterRobot4Card/main/images/card.png)
