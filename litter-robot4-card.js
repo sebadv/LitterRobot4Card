@@ -142,6 +142,29 @@ class xt extends nt {
       </ha-card>
     `;
   }
+
+  _getHopperIcon(entityId) {
+    const state = this.hass.states[entityId]?.state;
+    switch (state) {
+      case 'enabled':
+        return 'green';
+      case 'disabled':
+        return 'gray';
+      case 'empty':
+        return 'yellow';
+      case 'motor_fault_short':
+      case 'motor_ot_amps':
+      case 'motor_disconnected':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  }
+
+  _getHopperState(entityId) {
+    const state = this.hass.states[entityId]?.state;
+    return this._(`hopper.${state}`) || state;
+  }
 }
 xt.styles = n`
   ha-card {
@@ -207,27 +230,4 @@ try {
   console.debug("Defining custom elements..."), customElements.define("litter-robot4-card", xt), customElements.define("litter-robot4-editor", dt), console.debug("Custom elements defined successfully");
 } catch (t) {
   console.error("Error defining custom elements:", t);
-}
-
-_getHopperIcon(entityId) {
-  const state = this.hass.states[entityId]?.state;
-  switch (state) {
-    case 'enabled':
-      return 'green';
-    case 'disabled':
-      return 'gray';
-    case 'empty':
-      return 'yellow';
-    case 'motor_fault_short':
-    case 'motor_ot_amps':
-    case 'motor_disconnected':
-      return 'red';
-    default:
-      return 'gray';
-  }
-}
-
-_getHopperState(entityId) {
-  const state = this.hass.states[entityId]?.state;
-  return this._(`hopper.${state}`) || state;
 }
