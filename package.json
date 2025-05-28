@@ -1,6 +1,6 @@
 {
   "name": "litter-robot4-card",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A custom card to show Litter-Robot 4 status with litter level, waste drawer, and optional hopper support",
   "main": "dist/litter-robot4-card.js",
   "scripts": {
