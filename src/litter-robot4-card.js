@@ -4,6 +4,9 @@
  * Compatible with Home Assistant's frontend without external dependencies
  */
 
+// Import the LitElement editor
+import './litter-robot4-editor.ts';
+
 console.debug("Registering Litter-Robot 4 Card...");
 console.info("%c LITTER-ROBOT-4-CARD %c Loaded ", "color: white; background: #4caf50; font-weight: 700;", "color: #4caf50; background: white; font-weight: 700;");
 
